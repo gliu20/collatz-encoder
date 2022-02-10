@@ -91,3 +91,46 @@ const decodeCollatz = (input) => {
 
     return decoding;
 }
+
+const encodeChar = (input) => {
+    const charBitLength = 7n;
+    const isValidChar = (charCode) => charCode < 127n;
+
+    let encoding = 0n;
+
+    for (let i = 0n; i < BigInt(input.length); i++) {
+        const charCode = BigInt(input.charCodeAt(Number(i)));
+        const bitOffset = charBitLength * i;
+        if (isValidChar(charCode)) {
+            encoding |= charCode << bitOffset;
+        }
+        // we siliently ignore invalid characters
+    }
+
+    return encoding;
+}
+
+const decodeChar = (input) => {
+    const charBitLength = 7n;
+    const bitMask = 127n;
+    let decoding = "";
+
+    while (input !== 0n) {
+        const charCode = Number(input & bitMask);
+
+        // add decoded char to back and move on to next char
+        decoding += String.fromCharCode(charCode);
+        input >>= charBitLength;
+    }
+
+    return decoding;
+}
+
+
+
+
+
+
+
+
+
