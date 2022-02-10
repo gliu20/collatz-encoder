@@ -7,17 +7,17 @@
 // and is present on all encodings (to make sure
 // we always know the number of iterations we need
 // for decoding)
-const encodeCollatz = (bigInt) => {
+const encodeCollatz = (input) => {
     const isEven = (bigInt) => (bigInt & 1n) === 0n;
     let encoding = 0n, i = 0n;
 
-    while (bigInt !== 1n) {
-        if (isEven(bigInt)) {
-            bigInt >>= 1n; // x / 2
+    while (input !== 1n) {
+        if (isEven(input)) {
+            input >>= 1n; // x / 2
         }
         else {
-            const bigIntTimesThree = (bigInt << 1n) + bigInt; // 3 x
-            bigInt = (bigIntTimesThree + 1n) >> 1n; // (3 x + 1) / 2
+            const bigIntTimesThree = (input << 1n) + input; // 3 x
+            input = (bigIntTimesThree + 1n) >> 1n; // (3 x + 1) / 2
 
             // set i-th bit of encoding to 1
             // this represents that we executed the odd branch
@@ -32,25 +32,25 @@ const encodeCollatz = (bigInt) => {
     return encoding | (1n << i);
 }
 
-const decodeCollatz = (bigInt) => {
-    const bitLengthOf = (bigInt) => {
+const decodeCollatz = (input) => {
+    const bitLengthOf = (input) => {
         let length = 0n;
 
         // keep shifting off bits until
         // we reach the Most Significant Bit
         // which is always set to 1 as defined
         // by our encoding
-        while (bigInt !== 1n) {
+        while (input !== 1n) {
             length++;
-            bigInt >>= 1n;
+            input >>= 1n;
         }
 
         return length;
     };
 
-    const bitAtIndex = (bigInt, index) => { 
+    const bitAtIndex = (input, index) => { 
         const bitMask = 1n << index;
-        const bit = bigInt & bitMask; 
+        const bit = input & bitMask; 
         
         // right shift to bring bit down to 
         // a 1 or a 0 instead of a binary
@@ -65,7 +65,7 @@ const decodeCollatz = (bigInt) => {
     // this is what we will do.
     let decoding = 1n;
 
-    for (let i = bitLengthOf(bigInt) - 1n; i >= 0n; i--) {
+    for (let i = bitLengthOf(input) - 1n; i >= 0n; i--) {
         // we defined the collatz function as
         // the modified format
         // where it is f(x) = {
@@ -78,7 +78,7 @@ const decodeCollatz = (bigInt) => {
 
         decoding <<= 1n; // decoding *= 2
 
-        if (bitAtIndex(bigInt, i) !== 0n) {
+        if (bitAtIndex(input, i) !== 0n) {
 
             // these instructions are not
             // optimized with bitwise ops 
