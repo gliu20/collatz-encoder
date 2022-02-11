@@ -1,4 +1,18 @@
 
+const _bitLengthOf = (input) => {
+    let length = 0n;
+
+    // keep shifting off bits until
+    // we reach the Most Significant Bit
+    // which is always set to 1 as defined
+    // by our encoding
+    while (input !== 1n) {
+        length++;
+        input >>= 1n;
+    }
+
+    return length;
+};
 // returns encoding representation
 // where the highest bit represents the i-th bit
 // 1 bits represent using the odd branch
@@ -33,25 +47,11 @@ const encodeCollatz = (input) => {
 }
 
 const decodeCollatz = (input) => {
-    const bitLengthOf = (input) => {
-        let length = 0n;
 
-        // keep shifting off bits until
-        // we reach the Most Significant Bit
-        // which is always set to 1 as defined
-        // by our encoding
-        while (input !== 1n) {
-            length++;
-            input >>= 1n;
-        }
-
-        return length;
-    };
-
-    const bitAtIndex = (input, index) => { 
+    const bitAtIndex = (input, index) => {
         const bitMask = 1n << index;
-        const bit = input & bitMask; 
-        
+        const bit = input & bitMask;
+
         // right shift to bring bit down to 
         // a 1 or a 0 instead of a binary
         // number with lots of trailing 0s
@@ -65,7 +65,7 @@ const decodeCollatz = (input) => {
     // this is what we will do.
     let decoding = 1n;
 
-    for (let i = bitLengthOf(input) - 1n; i >= 0n; i--) {
+    for (let i = _bitLengthOf(input) - 1n; i >= 0n; i--) {
         // we defined the collatz function as
         // the modified format
         // where it is f(x) = {
@@ -92,15 +92,15 @@ const decodeCollatz = (input) => {
     return decoding;
 }
 
-const encodeChar = (input) => {
+const encodeString = (input) => {
     const charBitLength = 7n;
     const isValidChar = (charCode) => charCode < 127n;
 
     let encoding = 0n;
 
-    for (let i = 0n; i < BigInt(input.length); i++) {
-        const charCode = BigInt(input.charCodeAt(Number(i)));
-        const bitOffset = charBitLength * i;
+    for (let i = 0; i < input.length; i++) {
+        const charCode = BigInt(input.charCodeAt(i));
+        const bitOffset = charBitLength * BigInt(i);
         if (isValidChar(charCode)) {
             encoding |= charCode << bitOffset;
         }
@@ -110,7 +110,7 @@ const encodeChar = (input) => {
     return encoding;
 }
 
-const decodeChar = (input) => {
+const decodeString = (input) => {
     const charBitLength = 7n;
     const bitMask = 127n;
     let decoding = "";
@@ -126,11 +126,37 @@ const decodeChar = (input) => {
     return decoding;
 }
 
+const _encodeKeyToLength = (key, desiredBitLength) => {
+    let encodedKey = encodeCollatz(key);
+    let targetValue = 1n << desiredBitLength; // 2 ** desiredBitLength
 
+    // equivalent to _bitLengthOf(encoding) < desiredBitLength
+    while (encodedKey <= targetValue) {
+        encodedKey = encodeCollatz(encodedKey);
+    }
 
+    return encodedKey;
+}
 
+const encryptCollatz = (input, key) => {
+    const plainTextEncoding = encodeCollatz(encodeString(input));
+    const plainTextEncodingLength = _bitLengthOf(plainTextEncoding);
+    const encodedKey = _encodeKeyToLength(encodeString(key), plainTextEncodingLength);
+    const cipherTextEncoding = encodedKey ^ plainTextEncoding;
 
+    console.log(encodedKey.toString(2));
+    console.log(plainTextEncoding.toString(2));
+    console.log(cipherTextEncoding.toString(2));
 
+    return cipherTextEncoding;
+}
 
+const decryptCollatz = (input, key) => {
+    const cipherText = input;
+    const cipherTextLength = _bitLengthOf(cipherText);
+    const encodedKey = _encodeKeyToLength(encodeString(key), cipherTextLength);
 
+    const plainTextEncoding = encodedKey ^ cipherText;
 
+    return decodeString(decodeCollatz(plainTextEncoding));
+}
