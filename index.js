@@ -139,8 +139,8 @@ const _encodeKeyToLength = (key, desiredBitLength) => {
 }
 
 const _encodeKeyToLengthAndDeleteInfo = (key, desiredBitLength) => {
-    const minBitLength = 32n;
-    const deleteBitLength = 16n;
+    const minBitLength = 2048n;
+    const deleteBitLength = minBitLength >> 1n;
 
     let encodedKey = _encodeKeyToLength(key, minBitLength) >> deleteBitLength;
     let targetValue = 1n << desiredBitLength; // 2 ** desiredBitLength
