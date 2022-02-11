@@ -142,7 +142,7 @@ const _encodeKeyToLengthAndDeleteInfo = (key, desiredBitLength) => {
     const minBitLength = 32n;
     const deleteBitLength = 16n;
 
-    let encodedKey = _encodeKeyToLength(key, minBitLength);
+    let encodedKey = _encodeKeyToLength(key, minBitLength) >> deleteBitLength;
     let targetValue = 1n << desiredBitLength; // 2 ** desiredBitLength
 
     // equivalent to _bitLengthOf(encoding) < desiredBitLength
