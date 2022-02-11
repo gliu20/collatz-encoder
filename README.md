@@ -4,7 +4,9 @@ Encode using the collatz conjecture
 
 ## CTF Challenge [Rev]
 ```
-const flag = "flag{n0t_th3_rEa1_fl4g}";
+// u have to replace with the actual flag
+// or the answer yielded won't match the below comment
+const flag = "flag{n0t_th3_rEa1_fl4g}"; 
 
 encryptCollatz("this is a crib", flag);
 
