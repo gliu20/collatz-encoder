@@ -138,10 +138,30 @@ const _encodeKeyToLength = (key, desiredBitLength) => {
     return encodedKey;
 }
 
+const _encodeKeyToLengthAndDeleteInfo = (key, desiredBitLength) => {
+    const minBitLength = 2048n;
+    const deleteBitLength = minBitLength >> 1n;
+
+    let encodedKey = _encodeKeyToLength(key, minBitLength) >> deleteBitLength;
+    let targetValue = 1n << desiredBitLength; // 2 ** desiredBitLength
+
+    // equivalent to _bitLengthOf(encoding) < desiredBitLength
+    while (encodedKey <= targetValue) {
+        // we expand key by collatz encoding it and then we
+        // delete the least significant bits 
+        // so that reversing is more difficult because
+        // information has been lost
+        encodedKey = encodeCollatz(encodedKey);
+        encodedKey >>= deleteBitLength;
+    }
+
+    return encodedKey;
+}
+
 const encryptCollatz = (input, key) => {
     const plainTextEncoding = encodeCollatz(encodeString(input));
     const plainTextEncodingLength = _bitLengthOf(plainTextEncoding);
-    const encodedKey = _encodeKeyToLength(encodeString(key), plainTextEncodingLength);
+    const encodedKey = _encodeKeyToLengthAndDeleteInfo(encodeString(key), plainTextEncodingLength);
     const cipherTextEncoding = encodedKey ^ plainTextEncoding;
 
     console.log(encodedKey.toString(2));
@@ -154,7 +174,7 @@ const encryptCollatz = (input, key) => {
 const decryptCollatz = (input, key) => {
     const cipherText = input;
     const cipherTextLength = _bitLengthOf(cipherText);
-    const encodedKey = _encodeKeyToLength(encodeString(key), cipherTextLength);
+    const encodedKey = _encodeKeyToLengthAndDeleteInfo(encodeString(key), cipherTextLength);
 
     const plainTextEncoding = encodedKey ^ cipherText;
 
