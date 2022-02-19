@@ -1,5 +1,5 @@
 """
-utility functions for converting between bytesarrays and ints
+utility functions for converting between byte arrays and ints
 and also dealng with common bit operations with ints
 """
 
@@ -53,6 +53,6 @@ def to_int(bytes_array):
 def to_bytes_array(num):
     """ convert int to bytes array """
     bit_length = get_bit_length(num)
-    byte_length = (bit_length // 2) + 1
+    byte_length = (bit_length // 8) + 1
 
     return num.to_bytes(byte_length, 'big')
