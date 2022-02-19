@@ -13,7 +13,6 @@ def init_parser():
         description="Encryption using the collatz conjecture"
     )
 
-
     parser_result.add_argument('--key', dest='key', action='store')
 
     parser_result.add_argument(
@@ -39,7 +38,7 @@ if __name__ == "__main__":
     start = time.process_time_ns()
 
     with args['source_file'] as source_file, args['dest_file'] as dest_file:
-        is_verbose = True
+        IS_VERBOSE = True
         mode = args['mode']
 
         print('[Info] Starting to ' + mode + ' ' + source_file.name + '...')
@@ -48,28 +47,36 @@ if __name__ == "__main__":
         dest_file = args['dest_file']
 
         if mode == "encode":
-            FILE_RESULT = bytes_file.read_file(source_file, collatz.encode, is_verbose=is_verbose)
-            bytes_file.write_file(dest_file, FILE_RESULT, is_verbose=is_verbose)
+            FILE_RESULT = bytes_file.read_file(
+                source_file, collatz.encode, is_verbose=IS_VERBOSE)
+            bytes_file.write_file(dest_file, FILE_RESULT,
+                                  is_verbose=IS_VERBOSE)
 
         elif mode == "decode":
-            FILE_RESULT = bytes_file.read_file(source_file, collatz.decode, is_verbose=is_verbose)
-            bytes_file.write_file(dest_file, FILE_RESULT, is_verbose=is_verbose)
+            FILE_RESULT = bytes_file.read_file(
+                source_file, collatz.decode, is_verbose=IS_VERBOSE)
+            bytes_file.write_file(dest_file, FILE_RESULT,
+                                  is_verbose=IS_VERBOSE)
 
         elif mode == "encrypt":
             if not args['key']:
                 print("Error: Missing key. Please use --key to specify a key.")
                 exit()
             key = bytes_int.to_int(bytearray(args['key'], 'utf-8'))
-            FILE_RESULT = bytes_file.read_file(source_file, collatz.encrypt(key), is_verbose=is_verbose)
-            bytes_file.write_file(dest_file, FILE_RESULT, is_verbose=is_verbose)
+            FILE_RESULT = bytes_file.read_file(source_file, collatz.encrypt(key),
+                                               is_verbose=IS_VERBOSE)
+            bytes_file.write_file(dest_file, FILE_RESULT,
+                                  is_verbose=IS_VERBOSE)
 
         elif mode == "decrypt":
             if not args['key']:
                 print("Error: Missing key. Please use --key to specify a key.")
                 exit()
             key = bytes_int.to_int(bytearray(args['key'], 'utf-8'))
-            FILE_RESULT = bytes_file.read_file(source_file, collatz.decrypt(key), is_verbose=is_verbose)
-            bytes_file.write_file(dest_file, FILE_RESULT, is_verbose=is_verbose)
+            FILE_RESULT = bytes_file.read_file(
+                source_file, collatz.decrypt(key), is_verbose=IS_VERBOSE)
+            bytes_file.write_file(dest_file, FILE_RESULT,
+                                  is_verbose=IS_VERBOSE)
 
         source_file.close()
         dest_file.close()
