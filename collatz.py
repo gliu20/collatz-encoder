@@ -147,7 +147,7 @@ def encrypt(key, is_verbose=False):
     def encrypt_helper(num):
         # expand key to length of message
         msg = encode(num)
-        msg_length = get_bit_length(msg)
+        msg_length = get_bit_length(msg) - 1
         msg_key = encode_to_length(key, msg_length)
 
         return msg ^ msg_key
@@ -160,7 +160,7 @@ def decrypt(key, is_verbose=False):
 
     def decrypt_helper(num):
         # expand key to length of message
-        msg_length = get_bit_length(num)
+        msg_length = get_bit_length(num) - 1
         msg_key = encode_to_length(key, msg_length)
 
         return decode(num ^ msg_key)
