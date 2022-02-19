@@ -43,11 +43,11 @@ if __name__ == "__main__":
         dest_file = args['dest_file']
 
         if mode == "encode":
-            FILE_RESULT = bytes_file.read_file(source_file, collatz.encode_collatz)
+            FILE_RESULT = bytes_file.read_file(source_file, collatz.encode)
             bytes_file.write_file(dest_file, FILE_RESULT)
 
         if mode == "decode":
-            FILE_RESULT = bytes_file.read_file(source_file, collatz.decode_collatz)
+            FILE_RESULT = bytes_file.read_file(source_file, collatz.decode)
             bytes_file.write_file(dest_file, FILE_RESULT)
 
         if mode == "encrypt":

@@ -9,7 +9,7 @@ from bytes_int import is_even, get_bit_at_index, get_bit_length
 # }
 
 
-def encode_collatz(num):
+def encode(num):
     """ takes num and encodes it into collatz (also a num)"""
     encoding = 0
     i = 0
@@ -31,7 +31,7 @@ def encode_collatz(num):
     return encoding | (1 << i)
 
 
-def decode_collatz(num):
+def decode(num):
     """ decode collatz encoding"""
     # we start at 1 because by the collatz conjecture, we know
     # that everything is supposed to eventually make its way to 1
