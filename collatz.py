@@ -52,3 +52,31 @@ def decode(num):
             decoding //= 3  # divide as ints
 
     return decoding
+
+
+def encode_to_length(num, target_bit_length):
+    """ keep encoding num until it is the desired bit length """
+    encoded_num = encode(num)
+    target_num = 1 << target_bit_length  # 2 ** target_bit_length
+
+    # TODO for performance, consider if comparing target_num is
+    # cheaper than the alternative
+    # equivalent to get_bit_length(encodeed_num) < target_bit_length
+    while encoded_num <= target_num:
+        encoded_num = encode(encoded_num)
+
+    return encoded_num
+
+
+def encrypt(key):
+    """ returns a function that encrypts with the key provided """
+    def encrypt_helper(num):
+        return num
+    return encrypt_helper
+
+
+def decrypt(key):
+    """ returns a function that decrypts with the key provided """
+    def decrypt_helper(num):
+        return num
+    return decrypt_helper

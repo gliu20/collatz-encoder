@@ -60,7 +60,7 @@ if __name__ == "__main__":
                 print("Error: Missing key. Please use --key to specify a key.")
                 exit()
             key = bytes_int.to_int(bytearray(args['key'], 'utf-8'))
-            FILE_RESULT = bytes_file.read_file(source_file, collatz.encrypt, is_verbose=is_verbose)
+            FILE_RESULT = bytes_file.read_file(source_file, collatz.encrypt(key), is_verbose=is_verbose)
             bytes_file.write_file(dest_file, FILE_RESULT, is_verbose=is_verbose)
 
         elif mode == "decrypt":
@@ -68,7 +68,7 @@ if __name__ == "__main__":
                 print("Error: Missing key. Please use --key to specify a key.")
                 exit()
             key = bytes_int.to_int(bytearray(args['key'], 'utf-8'))
-            FILE_RESULT = bytes_file.read_file(source_file, collatz.decrypt, is_verbose=is_verbose)
+            FILE_RESULT = bytes_file.read_file(source_file, collatz.decrypt(key), is_verbose=is_verbose)
             bytes_file.write_file(dest_file, FILE_RESULT, is_verbose=is_verbose)
 
         source_file.close()
