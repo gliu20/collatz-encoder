@@ -23,14 +23,13 @@ def get_bit_length_legacy(num):
         length += 1
         num >>= 1
 
-    return length
+    # we have to add 1 because we stop at 1
+    return length + 1
 
 
 def get_bit_length(num):
     """ gets bit length """
-    # we have to subtract by 1 because we don't count the MSB
-    # as part of the bit length (for legacy reasons)
-    return num.bit_length() - 1
+    return num.bit_length()
 
 
 def get_bit_at_index(num, index):
