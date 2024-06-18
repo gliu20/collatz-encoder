@@ -26,9 +26,12 @@ BLOCK_SIZE_MASK = (1 << (BLOCK_SIZE_ORDER + 1)) - 1
 # since it requires an indeterminate amount of ram
 
 
+
 def encode(num):
     """ takes num and encodes it into collatz (also a num)"""
-    encoding = 0
+    # Encoding is a list of bytes and is a bitfield
+    encoding = []
+    encoding_bytes = 0
     i = 0
 
     while num != 1:
@@ -38,31 +41,51 @@ def encode(num):
         else:
             # (3 x + 1) / 2 = x + (x + 1) / 2
             num = num + ((num + 1) >> 1)
-
-            # set i-th bit to 1
-            encoding |= (1 << i)
+            
+            # Set i-th bit
+            desired_byte = i // 8
+            desired_bit = i % 8
+            while desired_byte >= encoding_bytes:
+                encoding.append(0)
+                encoding_bytes += 1
+            
+            encoding[desired_byte] |= 1 << desired_bit
         i += 1
 
     # we mark the final (MSB) i-th bit as 1 so we know
     # the total amount of iterations for decoding
-    return encoding | (1 << i)
-
+    desired_byte = i // 8
+    desired_bit = i % 8
+    while desired_byte >= encoding_bytes:
+        encoding.append(0)
+        encoding_bytes += 1
+    
+    encoding[desired_byte] |= 1 << desired_bit
+    
+    # re-encode back to integer
+    return int.from_bytes(encoding, byteorder='little')
 
 def decode(num):
     """ decode collatz encoding"""
     # we start at 1 because by the collatz conjecture, we know
     # that everything is supposed to eventually make its way to 1
+    bit_length = get_bit_length(num)
     decoding = 1
+    encoding = num.to_bytes(bit_length // 8 + 1, byteorder='little') 
 
     # stop is -1 because we want to go from
     # `get_bit_length(num) - 2` to (and including) `0`
-    for i in range(get_bit_length(num) - 2, -1, -1):
+    for i in range(bit_length - 2, -1, -1):
         # since we defined the collatz function
         # so that x / 2 is performed no matter the branch,
         # we must reverse that in all cases
         decoding <<= 1
+        
+        desired_byte = i // 8
+        desired_bit = i % 8
+        bit_at_index = (encoding[desired_byte] & (1 << desired_bit)) >> desired_bit
 
-        if get_bit_at_index(num, i) != 0:
+        if bit_at_index != 0:
             # reverse the odd branch of the collatz function
             # decoding = (decoding - 1) / 3
             decoding -= 1
