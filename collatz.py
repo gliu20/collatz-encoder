@@ -36,8 +36,8 @@ def encode(num):
             # x / 2
             num >>= 1
         else:
-            num_times_three = (num << 1) + num  # 3x
-            num = (num_times_three + 1) >> 1  # (3x + 1) / 2
+            # (3 x + 1) / 2 = x + (x + 1) / 2
+            num = num + ((num + 1) >> 1)
 
             # set i-th bit to 1
             encoding |= (1 << i)
