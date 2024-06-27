@@ -11,6 +11,12 @@
 
 #define DEFER(...) for (int _i = 1; _i; _i = 0, ##__VA_ARGS__)
 
+#define LOG_EXECUTION_TIME(STR) for( \
+  clock_t _start = clock(), _end = 0; \
+  _end == 0; \
+  _end = clock(), \
+  printf((STR), (double) (_end - _start) / CLOCKS_PER_SEC))
+
 #define limb_addc __builtin_addcl
 #define limb_subc __builtin_subcl
 
@@ -525,150 +531,123 @@ void init_pool() {
 }
 
 int test() {
-  clock_t start, end;
-  double cpu_time_used;
-  
   limb_ll_t* ll = new_limb_list();
   insert_at_tail(ll, new_limb_val(1));
   
-  start = clock();
-  
-  for (len_t i = 0; i < 256*256*12; i++) {
-    limb_ll_t* input = copy_limb_list(ll);
-    limb_ll_t* collatz = collatz_encode(input);
-    limb_ll_t* uncollatz = collatz_decode(collatz);
-    canonicalize(uncollatz);
-    
-    if (!is_eq(ll, uncollatz)) {
-      printf("\nmain: input: ");
-      print_limb_list(ll);
-      printf("\nmain: collatz: ");
-      print_limb_list(collatz);
-      printf("\nmain: uncollatz: ");
-      print_limb_list(uncollatz);
-      printf("\n");
-      errx(EXIT_FAILURE, "err: collatz mismatch");
+  LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
+    for (len_t i = 0; i < 256*256*12; i++) {
+      limb_ll_t* input = copy_limb_list(ll);
+      limb_ll_t* collatz = collatz_encode(input);
+      limb_ll_t* uncollatz = collatz_decode(collatz);
+      canonicalize(uncollatz);
+      
+      if (!is_eq(ll, uncollatz)) {
+        printf("\nmain: input: ");
+        print_limb_list(ll);
+        printf("\nmain: collatz: ");
+        print_limb_list(collatz);
+        printf("\nmain: uncollatz: ");
+        print_limb_list(uncollatz);
+        printf("\n");
+        errx(EXIT_FAILURE, "err: collatz mismatch");
+      }
+      
+      return_limb_list_to_pool(input);
+      return_limb_list_to_pool(collatz);
+      return_limb_list_to_pool(uncollatz);
+      
+      plus_one(ll);
     }
     
-    return_limb_list_to_pool(input);
-    return_limb_list_to_pool(collatz);
-    return_limb_list_to_pool(uncollatz);
-    
-    plus_one(ll);
+    destroy_limb_list(ll);
+    destroy_limb_list(pool);
   }
-  
-  destroy_limb_list(ll);
-  destroy_limb_list(pool);
-  
-  end = clock();
-  cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-  
-  printf("Passed tests: %f seconds\n", cpu_time_used);
 
   return 0;
 }
 
 int test_range() {
-  clock_t start, end;
-  double cpu_time_used;
-  
   limb_ll_t* ll = new_limb_list();
   insert_at_tail(ll, new_limb_val(3));
   
-  start = clock();
   
-  for (len_t i = 0; i < 1024; i++) {
-    limb_ll_t* input = copy_limb_list(ll);
-    limb_ll_t* collatz = collatz_encode(input);
-    limb_ll_t* uncollatz = collatz_decode(collatz);
-    canonicalize(uncollatz);
-    
-    if (!is_eq(ll, uncollatz)) {
-      printf("\nmain: input: ");
-      print_limb_list(ll);
-      printf("\nmain: collatz: ");
-      print_limb_list(collatz);
-      printf("\nmain: uncollatz: ");
-      print_limb_list(uncollatz);
-      printf("\n");
-      errx(EXIT_FAILURE, "err: collatz mismatch");
+  LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
+    for (len_t i = 0; i < 1024; i++) {
+      limb_ll_t* input = copy_limb_list(ll);
+      limb_ll_t* collatz = collatz_encode(input);
+      limb_ll_t* uncollatz = collatz_decode(collatz);
+      canonicalize(uncollatz);
+      
+      if (!is_eq(ll, uncollatz)) {
+        printf("\nmain: input: ");
+        print_limb_list(ll);
+        printf("\nmain: collatz: ");
+        print_limb_list(collatz);
+        printf("\nmain: uncollatz: ");
+        print_limb_list(uncollatz);
+        printf("\n");
+        errx(EXIT_FAILURE, "err: collatz mismatch");
+      }
+
+      return_limb_list_to_pool(input);
+      return_limb_list_to_pool(collatz);
+      return_limb_list_to_pool(uncollatz);
+      
+      left_shift(ll);
+      minus_one(ll);
     }
 
-    return_limb_list_to_pool(input);
-    return_limb_list_to_pool(collatz);
-    return_limb_list_to_pool(uncollatz);
-    
-    left_shift(ll);
-    minus_one(ll);
+    destroy_limb_list(ll);
+    destroy_limb_list(pool);
   }
-
-
-  
-  destroy_limb_list(ll);
-  destroy_limb_list(pool);
-  
-  end = clock();
-  cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-  
-  printf("Passed tests: %f seconds\n", cpu_time_used);
 
   return 0;
 }
 
 int test_range2() {
-  clock_t start, end;
-  double cpu_time_used;
-  
   limb_ll_t* ll = new_limb_list();
   insert_at_tail(ll, new_limb_val(1));
   
-  start = clock();
-  
-  for (len_t i = 0; i < 1024; i++) {
-    limb_ll_t* input = copy_limb_list(ll);
-    limb_ll_t* collatz = collatz_encode(input);
-    limb_ll_t* uncollatz = collatz_decode(collatz);
-    canonicalize(uncollatz);
-    
-    if (!is_eq(ll, uncollatz)) {
-      printf("\nmain: input: ");
-      print_limb_list(ll);
-      printf("\nmain: collatz: ");
-      print_limb_list(collatz);
-      printf("\nmain: uncollatz: ");
-      print_limb_list(uncollatz);
-      printf("\n");
-      errx(EXIT_FAILURE, "err: collatz mismatch");
-    }
+  LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
+    for (len_t i = 0; i < 1024; i++) {
+      limb_ll_t* input = copy_limb_list(ll);
+      limb_ll_t* collatz = collatz_encode(input);
+      limb_ll_t* uncollatz = collatz_decode(collatz);
+      canonicalize(uncollatz);
+      
+      if (!is_eq(ll, uncollatz)) {
+        printf("\nmain: input: ");
+        print_limb_list(ll);
+        printf("\nmain: collatz: ");
+        print_limb_list(collatz);
+        printf("\nmain: uncollatz: ");
+        print_limb_list(uncollatz);
+        printf("\n");
+        errx(EXIT_FAILURE, "err: collatz mismatch");
+      }
 
-    if (i == 1023) {
-      printf("\nmain: input: \n");
-      print_limb_list(ll);
-      printf("\nmain: collatz: \n");
-      print_limb_list(collatz);
-      printf("\nmain: uncollatz: \n");
-      print_limb_list(uncollatz);
-      printf("\n");
-    }
+      if (i == 1023) {
+        printf("\nmain: input: \n");
+        print_limb_list(ll);
+        printf("\nmain: collatz: \n");
+        print_limb_list(collatz);
+        printf("\nmain: uncollatz: \n");
+        print_limb_list(uncollatz);
+        printf("\n");
+      }
 
-    return_limb_list_to_pool(input);
-    return_limb_list_to_pool(collatz);
-    return_limb_list_to_pool(uncollatz);
+      return_limb_list_to_pool(input);
+      return_limb_list_to_pool(collatz);
+      return_limb_list_to_pool(uncollatz);
+      
+      left_shift(ll);
+      plus_one(ll);
+    }
     
-    left_shift(ll);
-    plus_one(ll);
+    destroy_limb_list(ll);
+    destroy_limb_list(pool);
   }
-
-
   
-  destroy_limb_list(ll);
-  destroy_limb_list(pool);
-  
-  end = clock();
-  cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-  
-  printf("Passed tests: %f seconds\n", cpu_time_used);
-
   return 0;
 }
 
@@ -814,7 +793,9 @@ int main(int argc, char* argv[]) {
     return 0;
   }
   
-  if (argc == 4) encode_main(argc, argv);
+  if (argc == 4) {
+    LOG_EXECUTION_TIME("Encoded in %f seconds\n") encode_main(argc, argv);
+  }
   
   return 0;
 }
