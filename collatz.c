@@ -90,7 +90,7 @@ int test();
 
 
 void return_limb_to_pool(limb_li_t* li) {
-  if (pool->length >= POOL_MAX) {
+  if (__builtin_expect(pool->length >= POOL_MAX, 0)) {
     free(li);
     return;
   }
@@ -107,7 +107,7 @@ limb_li_t* new_limb() {
 }
 
 limb_li_t* new_limb_maybe_from_pool() {
-  if (pool->length > 0) {
+  if (__builtin_expect(pool->length > 0, 1)) {
     return remove_at_head(pool);
   }
   return new_limb();
@@ -159,7 +159,7 @@ limb_li_t* remove_at_head(limb_ll_t* ll) {
   
   limb_li_t* removed = ll->head;
   
-  if (ll->head == ll->head->next) {
+  if (__builtin_expect(ll->head == ll->head->next, 0)) {
     ll->length -= 1;
     ll->head = NULL;
     
@@ -331,13 +331,17 @@ void set_ith_bit(limb_ll_t* ll, len_t bit_index) {
     current->limb |= ((limb_t) 1) << desired_bit;
 }
 
+limb_t get_ith_bit_from_limb(limb_li_t* li, len_t desired_bit) {
+    return li->limb & (((limb_t) 1) << desired_bit);
+}
+
 limb_t get_ith_bit(limb_ll_t* ll, len_t bit_index) {
     len_t desired_limb = bit_index / LIMB_BIT_LENGTH;
     len_t desired_bit = bit_index % LIMB_BIT_LENGTH;
     
     if (desired_limb > ll->length) return 0;
     if (desired_limb == ll->length - 1) {
-      return ll->head->prev->limb & (((limb_t) 1) << desired_bit);
+      return get_ith_bit_from_limb(ll->head->prev, desired_bit);
     }
     
     // TODO: perf using slow list traversal as fallback
@@ -345,7 +349,7 @@ limb_t get_ith_bit(limb_ll_t* ll, len_t bit_index) {
     for (len_t i = 0; i < desired_limb; i++) {
       current = current->next;
     }
-    return current->limb & (((limb_t) 1) << desired_bit);
+    return get_ith_bit_from_limb(current, desired_bit);
 }
 
 void canonicalize(limb_ll_t* ll) {
@@ -384,9 +388,11 @@ len_t get_bit_length(limb_ll_t* ll) {
   canonicalize(ll);
   if (ll->length == 0) return 0;
   
-  //printf("todo: perf: use __builtin_clz for speed");
-  
   len_t available_bits = ll->length * LIMB_BIT_LENGTH;
+  // Counting bits in a loop may seem inefficient but this accounts
+  // for far less than 1% of the runtime. Additionally smart compilers
+  // look for common patterns like this and optimize it to a couple
+  // instructions anyway (optimized to BSR in gcc, but clang doesnt optimize this)
   limb_t most_significant_byte = ll->head->prev->limb;
   len_t used_bits = 0;
   while (most_significant_byte != 0) {
@@ -436,6 +442,32 @@ limb_ll_t* divide_by_three_limb(limb_li_t* li, len_t limb_index) {
     insert_at_tail(ll, new_limb_val(correction));
   }
   insert_at_tail(ll, new_limb_val(divide_result));
+  
+  return ll;
+}
+
+limb_ll_t* divide_by_three_limb_optim(limb_ll_t* ll, limb_li_t* li, len_t limb_index) {
+  limb_t divide_result = li->limb / 3;
+  limb_t remainder = li->limb % 3;
+  limb_t correction = LIMB_DIVIDE_THREE_LUT[remainder];
+  
+  limb_li_t* current = ll->head;
+  for (len_t i = 0; i < ll->length && i < limb_index + 2; i++) {
+    if (i < limb_index + 1) 
+      current->limb = correction;
+    else 
+      current->limb = divide_result;
+    current = current->next;
+  }
+  
+  // We insert an extra correction factor which represents
+  // the fractional bits to ensure correct division results
+  for (len_t i = 0; i < limb_index + 1; i++) {
+    if (i < limb_index + 1) 
+      insert_at_tail(ll, new_limb_val(correction));
+    else 
+      insert_at_tail(ll, new_limb_val(divide_result));
+  }
   
   return ll;
 }
@@ -496,6 +528,7 @@ limb_ll_t* collatz_encode(limb_ll_t* ll) {
 limb_ll_t* collatz_decode(limb_ll_t* ll) {
   limb_ll_t* result = new_limb_list();
   len_t bit_length = get_bit_length(ll);
+  
   pad_zero(result);
   plus_one(result);
 
@@ -787,7 +820,8 @@ void encode_main(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
   print_debug();
   init_pool();
-
+  test();
+  return 0;
   if (argc != 4 && argc != 3) {
     print_usage(argv[0]);
     return 0;
