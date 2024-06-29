@@ -1,38 +1,36 @@
-#include <err.h>
+
+
 #include <assert.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
+#include <err.h>
 #include <time.h>
-#include <limits.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdbool.h>
 
-#define NDEBUG
 
-#define DEFER(...) for (int _i = 1; _i; _i = 0, ##__VA_ARGS__)
+#define DEFER(...) for (int _i = 1; _i; _i = 0, __VA_ARGS__)
+
+#define max(a,b) ((a) > (b) ? (a) : (b))
 
 #define LOG_EXECUTION_TIME(STR) for( \
   clock_t _start = clock(), _end = 0; \
   _end == 0; \
   _end = clock(), \
   printf((STR), (double) (_end - _start) / CLOCKS_PER_SEC))
+  
+typedef unsigned long long limb_t;
 
-#define limb_addc __builtin_addcl
-#define limb_subc __builtin_subcl
 
-typedef unsigned long limb_t;
-typedef uint32_t len_t;
-
-#define LIMB_BIT_LENGTH (1ull * CHAR_BIT * sizeof(limb_t))
-#define LIMB_INT_MAX ((limb_t) (~0ull))
-#define LIMB_MSB_INDEX (LIMB_BIT_LENGTH - 1ull)
-#define LIMB_MSB_MASK (1ull << LIMB_MSB_INDEX)
-
-// 256*256*256 is approx 1.x GB
-// 256*256*128 is approx 964mb
-// 256*256*12 is approx 500mb
-#define POOL_MAX 256*256
-
+// Assume: Bit length of a byte == 8;
+// It is a hard requirement that we are working with bytes
+// with a standard bit length  of 8
+#define LIMB_CONTAINER_BIT_LENGTH (sizeof(limb_t) * 8u)
+#define LIMB_BIT_LENGTH (LIMB_CONTAINER_BIT_LENGTH - 1u)
+#define LIMB_BASE (((limb_t) 1u << LIMB_BIT_LENGTH) - 2u)
+#define LIMB_MAX_VAL (LIMB_BASE - 1u)
+#define LIMB_DIVIDE_BY_TWO (LIMB_BASE / 2u)
+#define LIMB_DIVIDE_BY_THREE (LIMB_BASE / 3u)
 
 typedef struct limb_li {
   limb_t limb;
@@ -41,64 +39,68 @@ typedef struct limb_li {
 } limb_li_t;
 
 typedef struct limb_ll {
-  len_t length;
+  size_t length;
   limb_li_t *head;
 } limb_ll_t;
 
-const static limb_t LIMB_DIVIDE_THREE_LUT[] = {
-    0,
-    (LIMB_INT_MAX / 3),
-    (LIMB_INT_MAX / 3) * 2
-};
+#define POOL_MAX (256u*256u)
 
 static limb_ll_t* pool;
 
-void return_limb_to_pool(limb_li_t* li);
-limb_li_t* new_limb();
-limb_li_t* new_limb_maybe_from_pool();
-limb_li_t* new_limb_val(limb_t limb);
-limb_ll_t* new_limb_list();
-void insert_at_tail(limb_ll_t* ll, limb_li_t* li);
-void insert_at_head(limb_ll_t* ll, limb_li_t* li);
+// Only valid for length >= 1
+#define FOR_EACH_CARRY_PROPAGATE(LL, EXPR_I) do { \
+  limb_t _carry = 0; \
+  limb_li_t* _current = (LL)->head; \
+  for (size_t i = 0; i < (LL)->length; i++) { \
+    limb_t current_limb = _current->limb; \
+    limb_t _result = (EXPR_I) + _carry; \
+    _current->limb = _result % LIMB_BASE; \
+    _carry = _result / LIMB_BASE; \
+    _current = _current->next;\
+  } \
+} \
+while (0)
+
+// Only valid for length >= 1
+#define FOR_EACH_ADD_CARRY_PROPAGATE(LL_A, LL_B, EXPR_I) do { \
+  limb_t _carry = 0; \
+  limb_li_t* _current_a = (LL_A)->head; \
+  limb_li_t* _current_b = (LL_B)->head; \
+  for (size_t _i = 0; _i < (LL_A)->length; _i++) { \
+    limb_t current_limb_a = _current_a->limb; \
+    limb_t current_limb_b = _current_b->limb; \
+    limb_t _result = (EXPR_I) + _carry; \
+    _current_a->limb = _result % LIMB_BASE; \
+    _carry = _result / LIMB_BASE; \
+    _current_a = _current_a->next;\
+    _current_b = _current_b->next;\
+  } \
+} \
+while (0)
+
+// Only valid for length >= 1
+#define FOR_EACH_CARRY_PROPAGATE_NEXT(LL, EXPR_I) do { \
+  limb_t _carry = 0; \
+  limb_li_t* _current = (LL)->head; \
+  for (size_t _i = 0; _i < (LL)->length - 1; _i++) { \
+    limb_t current_limb = _current->limb; \
+    limb_t next_limb = _current->next->limb; \
+    limb_t _result = (EXPR_I) + _carry; \
+    _current->limb = _result % LIMB_BASE; \
+    _carry = _result / LIMB_BASE; \
+    _current = _current->next;\
+  } \
+  limb_t current_limb = _current->limb; \
+  limb_t next_limb = 0; \
+  limb_t _result = (EXPR_I) + _carry; \
+  _current->limb = _result % LIMB_BASE; \
+  _carry = _result / LIMB_BASE; \
+} \
+while (0)
+
 limb_li_t* remove_at_head(limb_ll_t* ll);
-limb_li_t* remove_at_tail(limb_ll_t* ll);
-bool is_even(limb_ll_t* ll);
-void pad_zero(limb_ll_t* ll);
-void guard_against_overflow(limb_ll_t* ll);
-void left_shift(limb_ll_t* ll);
-void right_shift(limb_ll_t* ll);
-void plus_one(limb_ll_t* ll);
-void minus_one(limb_ll_t* ll);
-limb_ll_t* add(limb_ll_t* ll_a, limb_ll_t* ll_b);
-void set_ith_bit(limb_ll_t* ll, len_t bit_index);
-limb_t get_ith_bit(limb_ll_t* ll, len_t bit_index);
-void canonicalize(limb_ll_t* ll);
-bool is_eq_one(limb_ll_t* ll);
-bool is_eq(limb_ll_t* ll_a, limb_ll_t* ll_b);
-len_t get_bit_length(limb_ll_t* ll);
-limb_ll_t* copy_limb_list(limb_ll_t* ll);
-void destroy_limb_list(limb_ll_t* ll);
-void return_limb_list_to_pool(limb_ll_t* ll);
-limb_ll_t* divide_by_three_limb(limb_li_t* li, len_t limb_index);
-limb_ll_t* divide_by_three(limb_ll_t* ll);
+void return_limb_to_pool(limb_li_t* li);
 void print_limb_list(limb_ll_t* ll);
-limb_ll_t* collatz_encode(limb_ll_t* ll);
-limb_ll_t* collatz_decode(limb_ll_t* ll);
-void print_debug();
-void init_pool();
-int test();
-
-
-void return_limb_to_pool(limb_li_t* li) {
-  if (__builtin_expect(pool->length >= POOL_MAX, 0)) {
-    free(li);
-    return;
-  }
-  li->limb = 0;
-  li->next = NULL;
-  li->prev = NULL;
-  insert_at_tail(pool, li);
-}
 
 limb_li_t* new_limb() {
   limb_li_t* ptr = (limb_li_t*) malloc(sizeof(limb_li_t));
@@ -107,7 +109,7 @@ limb_li_t* new_limb() {
 }
 
 limb_li_t* new_limb_maybe_from_pool() {
-  if (__builtin_expect(pool->length > 0, 1)) {
+  if (pool->length > 0) {
     return remove_at_head(pool);
   }
   return new_limb();
@@ -131,7 +133,7 @@ void insert_at_tail(limb_ll_t* ll, limb_li_t* li) {
   assert(ll != NULL && "err: attempted to insert into NULL list");
   assert(li != NULL && "err: attempted to insert NULL into list");
   
-  if (__builtin_expect(ll->head == NULL, 0)) {
+  if (ll->head == NULL) {
     ll->head = li;
     li->next = li;
     li->prev = li;
@@ -159,7 +161,7 @@ limb_li_t* remove_at_head(limb_ll_t* ll) {
   
   limb_li_t* removed = ll->head;
   
-  if (__builtin_expect(ll->head == ll->head->next, 0)) {
+  if (ll->head == ll->head->next) {
     ll->length -= 1;
     ll->head = NULL;
     
@@ -184,7 +186,7 @@ limb_li_t* remove_at_tail(limb_ll_t* ll) {
   
   limb_li_t* removed = ll->head->prev;
   
-  if (__builtin_expect(removed == ll->head, 0)) {
+  if (removed == ll->head) {
     return remove_at_head(ll);
   }
   
@@ -207,116 +209,73 @@ void pad_zero(limb_ll_t* ll) {
   insert_at_tail(ll, new_limb_val(0));
 }
 
+void pad_to_length(limb_ll_t* ll, size_t length) {
+  while (ll->length < length) pad_zero(ll);
+}
+
 void guard_against_empty(limb_ll_t* ll) {
   if (ll->head == NULL) pad_zero(ll);
 }
 
 void guard_against_overflow(limb_ll_t* ll) {
-  limb_t might_overflow = ll->head->prev->limb & LIMB_MSB_MASK;
-  if (might_overflow) {
+  if (ll->head->prev->limb != 0) {
     pad_zero(ll);
   }
+}
+
+void add(limb_ll_t* a, limb_ll_t* b) {
+  // Use max + 1 to ensure room in case of overflow 
+  size_t len = max(a->length, b->length) + 1;
+  pad_to_length(a, len);
+  pad_to_length(b, len);
+  
+  FOR_EACH_ADD_CARRY_PROPAGATE(a, b, current_limb_a + current_limb_b);
+}
+
+void plus_one(limb_ll_t* ll) {
+  guard_against_empty(ll);
+  guard_against_overflow(ll);
+  
+  FOR_EACH_CARRY_PROPAGATE(ll, current_limb + (i == 0));
+}
+
+void minus_one(limb_ll_t* ll) {
+  guard_against_empty(ll);
+  guard_against_overflow(ll);
+  
+  FOR_EACH_CARRY_PROPAGATE(ll, current_limb + LIMB_MAX_VAL);
 }
 
 void left_shift(limb_ll_t* ll) {
   guard_against_empty(ll);
   guard_against_overflow(ll);
-  limb_t carry = 0;
-  limb_li_t* current = ll->head;
-  for (len_t i = 0; i < ll->length; i++) {
-    limb_t result = (current->limb << 1u) | carry;
-    carry = (current->limb & LIMB_MSB_MASK) >> LIMB_MSB_INDEX;
-    current->limb = result & LIMB_INT_MAX;
-    current = current->next;
-  }
+  
+  FOR_EACH_CARRY_PROPAGATE(ll, current_limb << 1u);
 }
 
 void right_shift(limb_ll_t* ll) {
   guard_against_empty(ll);
-  limb_t carry = 0;
-  limb_li_t* current = ll->head->prev;
-  for (len_t i = 0; i < ll->length; i++) {
-    limb_t result = (current->limb >> 1) | carry;
-    carry = (current->limb & 1u) << LIMB_MSB_INDEX;
-    current->limb = result & LIMB_INT_MAX;
-    current = current->prev;
-  }
+  //guard_against_overflow(ll);
+  
+  // $$ 
+  // \sum_{i=0}^{n} (a_i/3)b^i
+  // = \sum_{i=0}^{n} \left( (a_i//3) + (a_{i+1}%3)(b/3) \right) b^i 
+  // $$
+  FOR_EACH_CARRY_PROPAGATE_NEXT(ll, (current_limb >> 1u) + (next_limb & 1u) * LIMB_DIVIDE_BY_TWO);
 }
 
-void plus_one(limb_ll_t* ll) {
-  limb_li_t* current = ll->head;
-  for (len_t i = 0; i < ll->length; i++) {
-    limb_t carry = 0;
-    current->limb = limb_addc(current->limb, 0, 1, &carry);
-    if (!carry) break;
-    current = current->next;
-  }
+void divide_by_three(limb_ll_t* ll) {
+  guard_against_empty(ll);
+  guard_against_overflow(ll);
+  
+  FOR_EACH_CARRY_PROPAGATE_NEXT(ll, (current_limb / 3u) + (next_limb % 3u) * LIMB_DIVIDE_BY_THREE);
 }
 
-void minus_one(limb_ll_t* ll) {
-  limb_li_t* current = ll->head;
-  for (len_t i = 0; i < ll->length; i++) {
-    limb_t carry = 0;
-    current->limb = limb_subc(current->limb, 0, 1, &carry);
-    if (!carry) break;
-    current = current->next;
-  }
-}
-
-limb_ll_t* add(limb_ll_t* ll_a, limb_ll_t* ll_b) {
-  if (ll_a->length < ll_b->length) {
-    // We swap the values of the limb_ll_t struct instead
-    // of the ptrs to the struct so that ptrs to ll_a and ll_b
-    // remain unchanged
+void set_ith_bit(limb_ll_t* ll, size_t bit_index) {
+    size_t desired_limb = bit_index / LIMB_CONTAINER_BIT_LENGTH;
+    size_t desired_bit = bit_index % LIMB_CONTAINER_BIT_LENGTH;
     
-    // Swap head ptr
-    {
-      limb_li_t* temp = ll_a->head;
-      ll_a->head = ll_b->head;
-      ll_b->head = temp;
-    }
-    // Swap lengths
-    {
-      len_t temp = ll_a->length;
-      ll_a->length = ll_b->length;
-      ll_b->length = temp;
-    }
-  }
-  
-  guard_against_overflow(ll_a);
-  
-  limb_t carry_in = 0;
-  limb_t carry_out = 0;
-  limb_li_t* current_a = ll_a->head;
-  limb_li_t* current_b = ll_b->head;
-  len_t i;
-  
-  // Add limbs up to length of smaller operand
-  for (i = 0; i < ll_b->length; i++) {
-    current_a->limb = limb_addc(current_a->limb, current_b->limb, carry_in, &carry_out);
-    carry_in = carry_out;
-    current_a = current_a->next;
-    current_b = current_b->next;
-  }
-  
-  // Carry propagate until length of bigger operand
-  for (; i < ll_a->length; i++) {
-    current_a->limb = limb_addc(current_a->limb, 0, carry_in, &carry_out);
-    if (!carry_out) break;
-    carry_in = carry_out;
-    current_a = current_a->next;
-  }
-  
-  return ll_a;
-}
-
-void set_ith_bit(limb_ll_t* ll, len_t bit_index) {
-    len_t desired_limb = bit_index / LIMB_BIT_LENGTH;
-    len_t desired_bit = bit_index % LIMB_BIT_LENGTH;
-    
-    while (desired_limb >= ll->length) {
-        pad_zero(ll);
-    }
+    pad_to_length(ll, desired_limb + 1);
     
     if (desired_limb == ll->length - 1) {
       ll->head->prev->limb |= ((limb_t) 1) << desired_bit;
@@ -325,19 +284,19 @@ void set_ith_bit(limb_ll_t* ll, len_t bit_index) {
     
     // TODO: perf using slow list traversal as fallback
     limb_li_t* current = ll->head;
-    for (len_t i = 0; i < desired_limb; i++) {
+    for (size_t i = 0; i < desired_limb; i++) {
       current = current->next;
     }
     current->limb |= ((limb_t) 1) << desired_bit;
 }
 
-limb_t get_ith_bit_from_limb(limb_li_t* li, len_t desired_bit) {
+limb_t get_ith_bit_from_limb(limb_li_t* li, size_t desired_bit) {
     return li->limb & (((limb_t) 1) << desired_bit);
 }
 
-limb_t get_ith_bit(limb_ll_t* ll, len_t bit_index) {
-    len_t desired_limb = bit_index / LIMB_BIT_LENGTH;
-    len_t desired_bit = bit_index % LIMB_BIT_LENGTH;
+limb_t get_ith_bit(limb_ll_t* ll, size_t bit_index) {
+    size_t desired_limb = bit_index / LIMB_CONTAINER_BIT_LENGTH;
+    size_t desired_bit = bit_index % LIMB_CONTAINER_BIT_LENGTH;
     
     if (desired_limb > ll->length) return 0;
     if (desired_limb == ll->length - 1) {
@@ -345,11 +304,34 @@ limb_t get_ith_bit(limb_ll_t* ll, len_t bit_index) {
     }
     
     // TODO: perf using slow list traversal as fallback
+    if (desired_limb > ll->length / 2) {
+      // Traverse backwards when its on the other side linked list
+      limb_li_t* current = ll->head->prev;
+      for (size_t i = ll->length - 1; i > desired_limb; i--) {
+        current = current->prev;
+      }
+      return get_ith_bit_from_limb(current, desired_bit);
+    }
+    
     limb_li_t* current = ll->head;
-    for (len_t i = 0; i < desired_limb; i++) {
+    for (size_t i = 0; i < desired_limb; i++) {
       current = current->next;
     }
     return get_ith_bit_from_limb(current, desired_bit);
+}
+
+// If we traverse the limb list in reverse order, accelerates limb lookup by keeping
+// an accel limb_li_t to avoid having to re-navigate to the current location each iteration
+limb_t get_ith_bit_in_reverse_order(limb_li_t** accel, size_t* accel_pos, size_t bit_index) {
+  size_t desired_limb = bit_index / LIMB_CONTAINER_BIT_LENGTH;
+  size_t desired_bit = bit_index % LIMB_CONTAINER_BIT_LENGTH;
+  
+  if (desired_limb != *accel_pos) {
+    *accel = (*accel)->prev;
+    *accel_pos -= 1;
+  }
+  
+  return get_ith_bit_from_limb(*accel, desired_bit);
 }
 
 void canonicalize(limb_ll_t* ll) {
@@ -376,7 +358,7 @@ bool is_eq(limb_ll_t* ll_a, limb_ll_t* ll_b) {
   limb_li_t* current_a = ll_a->head;
   limb_li_t* current_b = ll_b->head;
   
-  for (len_t i = 0; i < ll_a->length; i++) {
+  for (size_t i = 0; i < ll_a->length; i++) {
     if (current_a->limb != current_b->limb) return false;
     current_a = current_a->next;
     current_b = current_b->next;
@@ -384,28 +366,28 @@ bool is_eq(limb_ll_t* ll_a, limb_ll_t* ll_b) {
   return true;
 }
 
-len_t get_bit_length(limb_ll_t* ll) {
+size_t get_bit_length(limb_ll_t* ll) {
   canonicalize(ll);
   if (ll->length == 0) return 0;
   
-  len_t available_bits = ll->length * LIMB_BIT_LENGTH;
+  size_t available_bits = ll->length * LIMB_CONTAINER_BIT_LENGTH;
   // Counting bits in a loop may seem inefficient but this accounts
   // for far less than 1% of the runtime. Additionally smart compilers
   // look for common patterns like this and optimize it to a couple
   // instructions anyway (optimized to BSR in gcc, but clang doesnt optimize this)
   limb_t most_significant_byte = ll->head->prev->limb;
-  len_t used_bits = 0;
+  size_t used_bits = 0;
   while (most_significant_byte != 0) {
     used_bits++;
     most_significant_byte >>= 1;
   }
-  return available_bits + used_bits - LIMB_BIT_LENGTH;
+  return available_bits + used_bits - LIMB_CONTAINER_BIT_LENGTH;
 }
 
 limb_ll_t* copy_limb_list(limb_ll_t* ll) {
   limb_ll_t* copy = new_limb_list();
   limb_li_t* current = ll->head;
-  for (len_t i = 0; i < ll->length; i++) {
+  for (size_t i = 0; i < ll->length; i++) {
     insert_at_tail(copy, new_limb_val(current->limb));
     current = current->next;
   }
@@ -420,6 +402,17 @@ void destroy_limb_list(limb_ll_t* ll) {
   free(ll);
 }
 
+void return_limb_to_pool(limb_li_t* li) {
+  if (pool->length >= POOL_MAX) {
+    free(li);
+    return;
+  }
+  li->limb = 0;
+  li->next = NULL;
+  li->prev = NULL;
+  insert_at_tail(pool, li);
+}
+
 void return_limb_list_to_pool(limb_ll_t* ll) {
   while (ll->length > 0) {
     limb_li_t* removed = remove_at_head(ll);
@@ -429,78 +422,9 @@ void return_limb_list_to_pool(limb_ll_t* ll) {
 }
 
 
-limb_ll_t* divide_by_three_limb(limb_li_t* li, len_t limb_index) {
-  limb_ll_t* ll = new_limb_list();
-  
-  limb_t divide_result = li->limb / 3;
-  limb_t remainder = li->limb % 3;
-  limb_t correction = LIMB_DIVIDE_THREE_LUT[remainder];
-  
-  // We insert an extra correction factor which represents
-  // the fractional bits to ensure correct division results
-  for (len_t i = 0; i < limb_index + 1; i++) {
-    insert_at_tail(ll, new_limb_val(correction));
-  }
-  insert_at_tail(ll, new_limb_val(divide_result));
-  
-  return ll;
-}
-
-limb_ll_t* divide_by_three_limb_optim(limb_ll_t* ll, limb_li_t* li, len_t limb_index) {
-  limb_t divide_result = li->limb / 3;
-  limb_t remainder = li->limb % 3;
-  limb_t correction = LIMB_DIVIDE_THREE_LUT[remainder];
-  
-  limb_li_t* current = ll->head;
-  for (len_t i = 0; i < ll->length && i < limb_index + 2; i++) {
-    if (i < limb_index + 1) 
-      current->limb = correction;
-    else 
-      current->limb = divide_result;
-    current = current->next;
-  }
-  
-  // We insert an extra correction factor which represents
-  // the fractional bits to ensure correct division results
-  for (len_t i = 0; i < limb_index + 1; i++) {
-    if (i < limb_index + 1) 
-      insert_at_tail(ll, new_limb_val(correction));
-    else 
-      insert_at_tail(ll, new_limb_val(divide_result));
-  }
-  
-  return ll;
-}
-
-// Division by 3 results are only correct for when the integer
-// quotient results in an odd integer
-limb_ll_t* divide_by_three(limb_ll_t* ll) {
-  limb_ll_t* result = new_limb_list();
-  limb_li_t* current = ll->head;
-  for (uint32_t i = 0; i < ll->length; i++) {
-    limb_ll_t* partial_div_result = divide_by_three_limb(current, i);
-    add(result, partial_div_result);
-    return_limb_list_to_pool(partial_div_result);
-    current = current->next;
-  }
-  // Remove the extra correction factor for the fractional bits
-  return_limb_to_pool(remove_at_head(result));
-  // Guarantee an odd result per what's expected for reversing a Collatz encoding
-  result->head->limb |= 1;
-  return result;
-}
-
-void print_limb_list(limb_ll_t* ll) {
-  limb_li_t* current = ll->head;
-  for (uint32_t i = 0; i < ll->length; i++) {
-    printf("%016lx  ", current->limb);
-    current = current->next;
-  }
-}
-
 limb_ll_t* collatz_encode(limb_ll_t* ll) {
   limb_ll_t* result = new_limb_list();
-  len_t i = 0;
+  size_t i = 0;
 
   if (ll->head == NULL) return result;
 
@@ -527,34 +451,32 @@ limb_ll_t* collatz_encode(limb_ll_t* ll) {
 
 limb_ll_t* collatz_decode(limb_ll_t* ll) {
   limb_ll_t* result = new_limb_list();
-  len_t bit_length = get_bit_length(ll);
+  size_t bit_length = get_bit_length(ll);
   
   pad_zero(result);
   plus_one(result);
 
   if (ll->head == NULL) return result;
   
-  for (len_t i = bit_length - 2; i != (~((len_t) 0)); i--) {
+  limb_li_t* accel = ll->head->prev;
+  size_t accel_pos = ll->length - 1;
+  for (size_t i = bit_length - 2; i != (~((size_t) 0)); i--) {
     left_shift(result);
     
-    if (get_ith_bit(ll, i) != 0) {
+    if (get_ith_bit_in_reverse_order(&accel, &accel_pos, i) != 0) {
       minus_one(result);
-      limb_ll_t* div_result = divide_by_three(result);
-      return_limb_list_to_pool(result);
-      result = div_result;
+      divide_by_three(result);
     }
   }
   return result;
 }
 
-
-void print_debug() {
-  printf("Debug:\n");
-  printf("\tusing bitwidth: %llu\n", LIMB_BIT_LENGTH);
-  printf("\tcalculated int_max: %llu\n", (unsigned long long) LIMB_INT_MAX);
-  printf("\tcalculated int_max/3: %llu\n", (unsigned long long) LIMB_DIVIDE_THREE_LUT[1]);
-  printf("\tcalculated 2*int_max/3: %llu\n", (unsigned long long) LIMB_DIVIDE_THREE_LUT[2]);
-  printf("\n");
+void print_limb_list(limb_ll_t* ll) {
+  limb_li_t* current = ll->head;
+  for (uint32_t i = 0; i < ll->length; i++) {
+    printf("%016llx  ", current->limb);
+    current = current->next;
+  }
 }
 
 void init_pool() {
@@ -563,12 +485,14 @@ void init_pool() {
   pool = new_limb_list();
 }
 
+
+
 int test() {
   limb_ll_t* ll = new_limb_list();
   insert_at_tail(ll, new_limb_val(1));
   
   LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
-    for (len_t i = 0; i < 256*256*12; i++) {
+    for (size_t i = 0; i < 256*256*12; i++) {
       limb_ll_t* input = copy_limb_list(ll);
       limb_ll_t* collatz = collatz_encode(input);
       limb_ll_t* uncollatz = collatz_decode(collatz);
@@ -605,7 +529,7 @@ int test_range() {
   
   
   LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
-    for (len_t i = 0; i < 1024; i++) {
+    for (size_t i = 0; i < 1024; i++) {
       limb_ll_t* input = copy_limb_list(ll);
       limb_ll_t* collatz = collatz_encode(input);
       limb_ll_t* uncollatz = collatz_decode(collatz);
@@ -642,7 +566,7 @@ int test_range2() {
   insert_at_tail(ll, new_limb_val(1));
   
   LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
-    for (len_t i = 0; i < 1024; i++) {
+    for (size_t i = 0; i < 1024; i++) {
       limb_ll_t* input = copy_limb_list(ll);
       limb_ll_t* collatz = collatz_encode(input);
       limb_ll_t* uncollatz = collatz_decode(collatz);
@@ -690,7 +614,7 @@ void print_usage(char* prog_name) {
 }
 
 
-void encode_main(int argc, char* argv[]) {
+void encode_main(char* argv[]) {
 
   FILE *in_file = fopen(argv[2], "rb");
   if (in_file == NULL) {
@@ -720,7 +644,7 @@ void encode_main(int argc, char* argv[]) {
     limb_ll_t* ll = new_limb_list();
 
     limb_t limb;
-    len_t actual_read = 0;
+    size_t actual_read = 0;
     size_t data_units_read;
     fpos_t pos;
     
@@ -739,7 +663,7 @@ void encode_main(int argc, char* argv[]) {
 
           // Read last bytes
           limb_t mini_limb[sizeof(limb)] = {0};
-          len_t mini_limb_index = 0;
+          size_t mini_limb_index = 0;
           size_t mini_data_units_read = 0;
 
           while (true) {
@@ -747,18 +671,17 @@ void encode_main(int argc, char* argv[]) {
             if (mini_data_units_read != 1) break;
           }
 
-
-          printf("info: read %hu bytes\n", mini_limb_index - 1);
+          printf("info: read %zu bytes\n", mini_limb_index - 1);
 
           // Reconstruct limb from mini limb
           limb = 0;
-          for (len_t i = 0; i < mini_limb_index - 1; i++) {
-            printf("info: got byte %02x\n", mini_limb[i]);
+          for (size_t i = 0; i < mini_limb_index - 1; i++) {
+            printf("info: got byte %02x\n", (char) mini_limb[i]);
             limb <<= 8;
             limb |= mini_limb[mini_limb_index - 2 - i];
           }
 
-          printf("info: reconstructed limb: %016lx", limb);
+          printf("info: reconstructed limb: %016llx", limb);
 
           insert_at_tail(ll, new_limb_val(limb));
 
@@ -774,7 +697,7 @@ void encode_main(int argc, char* argv[]) {
       insert_at_tail(ll, new_limb_val(limb));
     }
 
-    printf("\nread: %hu data units\n", actual_read);
+    printf("\nread: %zu data units\n", actual_read);
     //print_limb_list(ll);
     //printf("\n");
 
@@ -795,10 +718,10 @@ void encode_main(int argc, char* argv[]) {
 
     
     limb_li_t* current = collatz->head;
-    len_t actual_write = 0;
+    size_t actual_write = 0;
     size_t data_units_written;
     
-    for (len_t i = 0; i < collatz->length; i++) {
+    for (size_t i = 0; i < collatz->length; i++) {
       data_units_written= fwrite(&current->limb, sizeof(limb), 1, out_file);
       actual_write += data_units_written;
       if (data_units_written != 1) {
@@ -809,7 +732,7 @@ void encode_main(int argc, char* argv[]) {
       current = current->next;
     }
 
-    printf("\nwrite: %hu data units\n", actual_write);
+    printf("\nwrite: %zu data units\n", actual_write);
 
     destroy_limb_list(ll);
     destroy_limb_list(collatz);
@@ -818,17 +741,15 @@ void encode_main(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
-  print_debug();
   init_pool();
-  test();
-  return 0;
+  //test_range();
   if (argc != 4 && argc != 3) {
     print_usage(argv[0]);
     return 0;
   }
   
   if (argc == 4) {
-    LOG_EXECUTION_TIME("Encoded in %f seconds\n") encode_main(argc, argv);
+    LOG_EXECUTION_TIME("Encoded in %f seconds\n") encode_main(argv);
   }
   
   return 0;
