@@ -1,6 +1,6 @@
 
 
-#include <assert.h>
+//#include <assert.h>
 #include <err.h>
 #include <time.h>
 #include <stdlib.h>
@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+//#define NDEBUG
+#define assert(_ignore)
 
 #define DEFER(...) for (int _i = 1; _i; _i = 0, __VA_ARGS__)
 
@@ -255,13 +257,12 @@ void left_shift(limb_ll_t* ll) {
 
 void right_shift(limb_ll_t* ll) {
   guard_against_empty(ll);
-  //guard_against_overflow(ll);
   
   // $$ 
   // \sum_{i=0}^{n} (a_i/3)b^i
   // = \sum_{i=0}^{n} \left( (a_i//3) + (a_{i+1}%3)(b/3) \right) b^i 
   // $$
-  FOR_EACH_CARRY_PROPAGATE_NEXT(ll, (current_limb >> 1u) + (next_limb & 1u) * LIMB_DIVIDE_BY_TWO);
+  FOR_EACH_CARRY_PROPAGATE_NEXT(ll, (current_limb / 2u) + (next_limb % 2u) * LIMB_DIVIDE_BY_TWO);
 }
 
 void divide_by_three(limb_ll_t* ll) {
@@ -394,6 +395,31 @@ limb_ll_t* copy_limb_list(limb_ll_t* ll) {
   return copy;
 }
 
+void copy_into_limb_list(limb_ll_t* dest, limb_ll_t* src) {
+  limb_li_t* current_dest = dest->head;
+  limb_li_t* current_src = src->head;
+  size_t i;
+  
+  // Copy the shared part of the list
+  for (i = 0; i < dest->length && i < src->length; i++) {
+    current_dest->limb = current_src->limb;
+    current_dest = current_dest->next;
+    current_src = current_src->next;
+  }
+  
+  // Remove the extra values in dest
+  while (dest->length > src->length) {
+    limb_li_t* removed = remove_at_tail(dest);
+    return_limb_to_pool(removed);
+  }
+  
+  // Copy the extra values from src
+  for (; i < src->length; i++) {
+    insert_at_tail(dest, new_limb_val(current_src->limb));
+    current_src = current_src->next;
+  }
+}
+
 void destroy_limb_list(limb_ll_t* ll) {
   while (ll->length > 0) {
     limb_li_t* removed = remove_at_head(ll);
@@ -424,6 +450,7 @@ void return_limb_list_to_pool(limb_ll_t* ll) {
 
 limb_ll_t* collatz_encode(limb_ll_t* ll) {
   limb_ll_t* result = new_limb_list();
+  limb_ll_t* ll_half = new_limb_list();
   size_t i = 0;
 
   if (ll->head == NULL) return result;
@@ -436,16 +463,16 @@ limb_ll_t* collatz_encode(limb_ll_t* ll) {
     else {
       // (3 x + 1) / 2 = x + (x + 1) / 2 = x + ((x + 1) >> 1)
       // since x is odd: = x + (x >> 1) + 1
-      limb_ll_t* ll_half = copy_limb_list(ll);
+      copy_into_limb_list(ll_half, ll);
       right_shift(ll_half);
       add(ll, ll_half);
-      return_limb_list_to_pool(ll_half);
       plus_one(ll);
       set_ith_bit(result, i);
     }
     i++;
   }
   set_ith_bit(result, i);
+  return_limb_list_to_pool(ll_half);
   return result;
 }
 
