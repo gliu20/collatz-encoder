@@ -72,17 +72,17 @@ void insert_at_head(limb_vec_t* ll, limb_t limb) {
 }
 
 void remove_at_tail(limb_vec_t* ll) {
-  ll->handle[LL_CIRCULAR_INDEX(ll, ll->length - 1u)] = 0;
+  LL_TAIL(ll) = 0;
   ll->length--;
 }
 
 void remove_at_head(limb_vec_t* ll) {
-  ll->handle[LL_CIRCULAR_INDEX(ll, 0)] = 0;
+  LL_HEAD(ll) = 0;
   ll->head_offset++;
   ll->length--;
 }
 
-void destory_limb_list(limb_vec_t* ll) {
+void destroy_limb_list(limb_vec_t* ll) {
   free(ll->handle);
   ll->handle = NULL;
   ll->length = 0;
@@ -94,14 +94,14 @@ void print_limb_list(limb_vec_t* ll) {
   printf("pow2: %zu  ", ll->size_power_2);
   printf("len: %zu  ", ll->length);
   for (size_t i = 0; i < ll->length; i++) {
-    printf("%016llx  ", ll->handle[LL_CIRCULAR_INDEX(ll, i)]);
+    printf("%016llx  ", LL_INDEX(ll, i));
   }
   printf("\n");
 }
 
 bool is_even(limb_vec_t* ll) {
   if (ll->length == 0) return true;
-  return (ll->handle[LL_CIRCULAR_INDEX(ll, 0)] & 1) == 0;
+  return (LL_HEAD(ll) & 1) == 0;
 }
 
 void pad_zero(limb_vec_t* ll) {
@@ -117,7 +117,7 @@ void guard_against_empty(limb_vec_t* ll) {
 }
 
 void guard_against_overflow(limb_vec_t* ll) {
-  if (ll->handle[LL_CIRCULAR_INDEX(ll, ll->length - 1u)] != 0) {
+  if (LL_TAIL(ll) != 0) {
     pad_zero(ll);
   }
 }

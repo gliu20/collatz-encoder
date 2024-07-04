@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include "limb.h"
 
-
 #define LIMB_LIST_INITIAL_HEAD_OFFSET 4
 #define LIMB_LIST_INITIAL_SIZE 4
 
@@ -12,6 +11,10 @@
 #define LL_POWER_2_TO_MASK(POWER_2) ((1u << (POWER_2)) - 1u)
 #define LL_CIRCULAR_INDEX_MASK(LL, I, MASK) (((I) + (LL)->head_offset) & (MASK))
 #define LL_CIRCULAR_INDEX(LL, I) (LL_CIRCULAR_INDEX_MASK(LL, I, LL_POWER_2_TO_MASK((LL)->size_power_2)))
+
+#define LL_INDEX(LL, I) (LL)->handle[LL_CIRCULAR_INDEX(LL, I)]
+#define LL_HEAD(LL) LL_INDEX(LL, 0)
+#define LL_TAIL(LL) LL_INDEX(LL, (LL)->length - 1u)
 
 typedef struct limb_vec {
   size_t head_offset;
