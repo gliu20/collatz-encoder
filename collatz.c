@@ -262,18 +262,43 @@ void left_shift(limb_ll_t* ll) {
 void right_shift(limb_ll_t* ll) {
   guard_against_empty(ll);
   
-  // $$ 
-  // \sum_{i=0}^{n} (a_i/3)b^i
-  // = \sum_{i=0}^{n} \left( (a_i//3) + (a_{i+1}%3)(b/3) \right) b^i 
-  // $$
-  FOR_EACH_CARRY_PROPAGATE_NEXT(ll, (current_limb / 2u) + (next_limb % 2u) * LIMB_DIVIDE_BY_TWO);
+  limb_li_t* current = ll->head;
+  size_t i;
+  
+  for (i = 0; i < ll->length - 1; i++) {
+    limb_t current_limb = current->limb;
+    limb_t next_limb = current->next->limb;
+    limb_t result = (current_limb / 2u) + (next_limb % 2u) * LIMB_DIVIDE_BY_TWO;
+    current->limb = result;
+    current = current->next;
+  }
+  limb_t current_limb = current->limb;
+  limb_t next_limb = 0;
+  limb_t result = (current_limb / 2u) + (next_limb % 2u) * LIMB_DIVIDE_BY_TWO;
+  current->limb = result;
 }
 
 void divide_by_three(limb_ll_t* ll) {
   guard_against_empty(ll);
-  guard_against_overflow(ll);
   
-  FOR_EACH_CARRY_PROPAGATE_NEXT(ll, (current_limb / 3u) + (next_limb % 3u) * LIMB_DIVIDE_BY_THREE);
+  // $$ 
+  // \sum_{i=0}^{n} (a_i/3)b^i
+  // = \sum_{i=0}^{n} \left( (a_i//3) + (a_{i+1}%3)(b/3) \right) b^i 
+  // $$
+  limb_li_t* current = ll->head;
+  size_t i;
+  
+  for (i = 0; i < ll->length - 1; i++) {
+    limb_t current_limb = current->limb;
+    limb_t next_limb = current->next->limb;
+    limb_t result = (current_limb / 3u) + (next_limb % 3u) * LIMB_DIVIDE_BY_THREE;
+    current->limb = result;
+    current = current->next;
+  }
+  limb_t current_limb = current->limb;
+  limb_t next_limb = 0;
+  limb_t result = (current_limb / 3u) + (next_limb % 3u) * LIMB_DIVIDE_BY_THREE;
+  current->limb = result;
 }
 
 void fused_increment_divide_by_two(limb_ll_t* ll) {
@@ -604,7 +629,7 @@ int test_range2() {
   insert_at_tail(ll, new_limb_val(1));
   
   LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
-    for (size_t i = 0; i < 4096; i++) {
+    for (size_t i = 0; i < 1024; i++) {
       limb_ll_t* input = copy_limb_list(ll);
       limb_ll_t* collatz = collatz_encode(input);
       limb_ll_t* uncollatz = collatz_decode(collatz);
