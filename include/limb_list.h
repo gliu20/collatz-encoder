@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include "limb.h"
 
@@ -26,7 +27,10 @@ limb_t* new_limb_handle(size_t size_power_2);
 limb_vec_t* new_limb_list();
 
 void grow_limb_list(limb_vec_t* ll);
-void shrink_limb_list(limb_vec_t* ll);
+bool shrink_limb_list(limb_vec_t* ll);
+void grow_limb_list_to_length(limb_vec_t* ll, size_t length);
+void shrink_limb_list_to_length(limb_vec_t* ll, size_t length);
+
 
 /**
  * Utilities to insert and remove at head/tail

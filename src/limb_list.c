@@ -38,12 +38,12 @@ void grow_limb_list(limb_vec_t* ll) {
   ll->size_power_2 = new_size;
 }
 
-void shrink_limb_list(limb_vec_t* ll) {
+bool shrink_limb_list(limb_vec_t* ll) {
   // Allocate half the old container size
   size_t new_size = ll->size_power_2 - 1;
   
   // Not enough space so abandon attempting to shrink
-  if (new_size < ll->length) return; 
+  if (new_size < ll->length) return false; 
   
   limb_t* new_handle = new_limb_handle(new_size);
   
@@ -56,6 +56,20 @@ void shrink_limb_list(limb_vec_t* ll) {
   free(ll->handle);
   ll->handle = new_handle;
   ll->size_power_2 = new_size;
+
+  return true;
+}
+
+void grow_limb_list_to_length(limb_vec_t* ll, size_t length) {
+  while (LL_POWER_2_TO_SIZE(ll->size_power_2) < length)
+    grow_limb_list(ll);
+}
+
+void shrink_limb_list_to_length(limb_vec_t* ll, size_t length) {
+  while (LL_POWER_2_TO_SIZE(ll->size_power_2) > length) {
+    bool did_shrink = shrink_limb_list(ll);
+    if (!did_shrink) break;
+  }
 }
 
 void insert_at_tail(limb_vec_t* ll, limb_t limb) {
