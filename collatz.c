@@ -50,9 +50,12 @@ typedef struct limb_ll {
 static limb_ll_t* pool;
 
 // Only valid for length >= 1
+
+
 #define FOR_EACH_CARRY_PROPAGATE(LL, EXPR_I) do { \
   limb_t _carry = 0; \
   limb_li_t* _current = (LL)->head; \
+  _Pragma("clang loop distribute(enable)") \
   for (size_t i = 0; i < (LL)->length; i++) { \
     limb_t current_limb = _current->limb; \
     limb_t _result = (EXPR_I) + _carry; \
@@ -84,7 +87,8 @@ while (0)
 #define FOR_EACH_CARRY_PROPAGATE_NEXT(LL, EXPR_I) do { \
   limb_t _carry = 0; \
   limb_li_t* _current = (LL)->head; \
-  for (size_t _i = 0; _i < (LL)->length - 1; _i++) { \
+  size_t i; \
+  for (i = 0; i < (LL)->length - 1; i++) { \
     limb_t current_limb = _current->limb; \
     limb_t next_limb = _current->next->limb; \
     limb_t _result = (EXPR_I) + _carry; \
@@ -272,6 +276,13 @@ void divide_by_three(limb_ll_t* ll) {
   FOR_EACH_CARRY_PROPAGATE_NEXT(ll, (current_limb / 3u) + (next_limb % 3u) * LIMB_DIVIDE_BY_THREE);
 }
 
+void fused_increment_divide_by_two(limb_ll_t* ll) {
+  guard_against_empty(ll);
+  guard_against_overflow(ll);
+  
+  FOR_EACH_CARRY_PROPAGATE_NEXT(ll, (current_limb / 2u) + (next_limb % 2u) * LIMB_DIVIDE_BY_TWO + (i == 0));
+}
+
 void set_ith_bit(limb_ll_t* ll, size_t bit_index) {
     size_t desired_limb = bit_index / LIMB_CONTAINER_BIT_LENGTH;
     size_t desired_bit = bit_index % LIMB_CONTAINER_BIT_LENGTH;
@@ -447,7 +458,6 @@ void return_limb_list_to_pool(limb_ll_t* ll) {
   free(ll);
 }
 
-
 limb_ll_t* collatz_encode(limb_ll_t* ll) {
   limb_ll_t* result = new_limb_list();
   limb_ll_t* ll_half = new_limb_list();
@@ -462,11 +472,12 @@ limb_ll_t* collatz_encode(limb_ll_t* ll) {
     }
     else {
       // (3 x + 1) / 2 = x + (x + 1) / 2 = x + ((x + 1) >> 1)
-      // since x is odd: = x + (x >> 1) + 1
+      // since x is odd: = x + (x >> 1) + 1 also works
       copy_into_limb_list(ll_half, ll);
-      right_shift(ll_half);
+      
+      // let's use optimized: x + ((x + 1) >> 1)
+      fused_increment_divide_by_two(ll_half);
       add(ll, ll_half);
-      plus_one(ll);
       set_ith_bit(result, i);
     }
     i++;
@@ -593,7 +604,7 @@ int test_range2() {
   insert_at_tail(ll, new_limb_val(1));
   
   LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
-    for (size_t i = 0; i < 1024; i++) {
+    for (size_t i = 0; i < 4096; i++) {
       limb_ll_t* input = copy_limb_list(ll);
       limb_ll_t* collatz = collatz_encode(input);
       limb_ll_t* uncollatz = collatz_decode(collatz);
@@ -608,16 +619,6 @@ int test_range2() {
         print_limb_list(uncollatz);
         printf("\n");
         errx(EXIT_FAILURE, "err: collatz mismatch");
-      }
-
-      if (i == 1023) {
-        printf("\nmain: input: \n");
-        print_limb_list(ll);
-        printf("\nmain: collatz: \n");
-        print_limb_list(collatz);
-        printf("\nmain: uncollatz: \n");
-        print_limb_list(uncollatz);
-        printf("\n");
       }
 
       return_limb_list_to_pool(input);
@@ -769,6 +770,8 @@ void encode_main(char* argv[]) {
 
 int main(int argc, char* argv[]) {
   init_pool();
+  test_range2();
+  return 0;
   //test_range();
   if (argc != 4 && argc != 3) {
     print_usage(argv[0]);
