@@ -6,7 +6,7 @@ CC = clang
 
 WARNFLAGS = -Wall -Wextra -Wpedantic -Wno-strict-prototypes -Wno-declaration-after-statement -Wno-missing-prototypes -Wno-unsafe-buffer-usage -Weverything
 DEBUGFLAGS = -g -fno-omit-frame-pointer
-RELEASEFLAGS = -O3 -march=native -mtune=native -mllvm -unroll-count=32
+RELEASEFLAGS = -O3 -flto -march=native -mtune=native -mllvm -unroll-count=32
 ASANFLAGS = -O2 -fadddress=sanitize
 
 # build: $(WARNFLAGS) $(RELEASEFLAGS)
