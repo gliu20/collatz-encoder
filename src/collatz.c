@@ -1,7 +1,6 @@
 #include "limb.h"
 #include "limb_list.h"
 
-#include <assert.h>
 #include <err.h>
 #include <time.h>
 #include <stdlib.h>
@@ -70,7 +69,7 @@ void test_limb_list() {
   printf("remove all but one at head: ");
   print_limb_list(ll);
   
-  destory_limb_list(ll);
+  destroy_limb_list(ll);
 }
 
 int main() {

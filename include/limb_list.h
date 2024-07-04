@@ -22,11 +22,22 @@ typedef struct limb_vec {
 
 limb_t* new_limb_handle(size_t size_power_2);
 limb_vec_t* new_limb_list();
+
 void grow_limb_list(limb_vec_t* ll);
 void shrink_limb_list(limb_vec_t* ll);
+
+/**
+ * Utilities to insert and remove at head/tail
+ * ---
+ * These functions do not automatically resize
+ * the limb list and expects the caller to call
+ * grow and shrink to ensure the limb list is
+ * properly sized
+ */
 void insert_at_tail(limb_vec_t* ll, limb_t limb);
 void insert_at_head(limb_vec_t* ll, limb_t limb);
 void remove_at_tail(limb_vec_t* ll);
 void remove_at_head(limb_vec_t* ll);
-void destory_limb_list(limb_vec_t* ll);
+
+void destroy_limb_list(limb_vec_t* ll);
 void print_limb_list(limb_vec_t* ll);
