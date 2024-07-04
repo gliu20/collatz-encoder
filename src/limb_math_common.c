@@ -1,6 +1,4 @@
-
-#include "limb_math_radix_common.h"
-
+#include "limb_math_common.h"
 
 bool is_even(limb_vec_t* ll) {
   if (ll->length == 0) return true;
