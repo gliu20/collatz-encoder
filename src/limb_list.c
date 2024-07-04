@@ -22,6 +22,19 @@ limb_vec_t* new_limb_list() {
   return ll;
 }
 
+void copy_limb_list(limb_vec_t* dest, limb_vec_t* src) {
+  canonicalize(src);
+
+  dest->head_offset = LIMB_LIST_INITIAL_HEAD_OFFSET;
+  dest->length = 0;
+
+  grow_limb_list_to_length(dest, src->length);
+
+  for (size_t i = 0; i < src->length; i++) {
+    LL_INDEX(dest, i) = LL_INDEX(src, i);
+  }
+}
+
 void grow_limb_list(limb_vec_t* ll) {
   // Allocate double the old container size
   size_t new_size = ll->size_power_2 + 1;
@@ -61,7 +74,7 @@ bool shrink_limb_list(limb_vec_t* ll) {
 }
 
 void grow_limb_list_to_length(limb_vec_t* ll, size_t length) {
-  while (LL_POWER_2_TO_SIZE(ll->size_power_2) < length)
+  while (LL_POWER_2_TO_SIZE(ll->size_power_2) <= length)
     grow_limb_list(ll);
 }
 
