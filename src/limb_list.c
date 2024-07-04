@@ -22,6 +22,13 @@ limb_vec_t* new_limb_list() {
   return ll;
 }
 
+void canonicalize(limb_vec_t* ll) {
+  if (ll->length == 0) return;
+  while (LL_TAIL(ll) == 0) {
+    remove_at_tail(ll);
+  }
+}
+
 void copy_limb_list(limb_vec_t* dest, limb_vec_t* src) {
   canonicalize(src);
 

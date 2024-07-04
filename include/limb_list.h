@@ -26,6 +26,8 @@ typedef struct limb_vec {
 limb_t* new_limb_handle(size_t size_power_2);
 limb_vec_t* new_limb_list();
 
+
+void canonicalize(limb_vec_t* ll);
 void copy_limb_list(limb_vec_t* dest, limb_vec_t* src);
 
 void grow_limb_list(limb_vec_t* ll);

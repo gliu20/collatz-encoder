@@ -23,13 +23,6 @@ void guard_against_overflow(limb_vec_t* ll) {
   }
 }
 
-void canonicalize(limb_vec_t* ll) {
-  if (ll->length == 0) return;
-  while (LL_TAIL(ll) == 0) {
-    remove_at_tail(ll);
-  }
-}
-
 bool is_eq_one(limb_vec_t* ll) {  
   canonicalize(ll);
   if (ll->length != 1) return false;
