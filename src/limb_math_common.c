@@ -6,6 +6,7 @@ bool is_even(limb_vec_t* ll) {
 }
 
 void pad_zero(limb_vec_t* ll) {
+  grow_limb_list_to_length(ll, ll->length + 1);
   insert_at_tail(ll, 0);
 }
 

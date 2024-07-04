@@ -9,8 +9,6 @@
 
 #define DEFER(...) for (int _i = 1; _i; _i = 0, __VA_ARGS__)
 
-#define max(a,b) ((a) > (b) ? (a) : (b))
-
 #define LOG_EXECUTION_TIME(STR) for( \
   clock_t _start = clock(), _end = 0; \
   _end == 0; \
