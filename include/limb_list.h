@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdlib.h>
-#include <stdint.h>
 #include "limb.h"
 
 #define LIMB_LIST_INITIAL_HEAD_OFFSET 4
