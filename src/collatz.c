@@ -1,5 +1,8 @@
 #include "limb.h"
 #include "limb_list.h"
+#include "limb_math_common.h"
+#include "limb_math_radix_pow2.h"
+#include "limb_math_radix_custom.h"
 
 #include <err.h>
 #include <time.h>
@@ -14,6 +17,61 @@
   _end == 0; \
   _end = clock(), \
   printf((STR), (double) (_end - _start) / CLOCKS_PER_SEC))
+
+
+limb_vec_t* collatz_encode(limb_vec_t* ll) {
+  limb_vec_t* result = new_limb_list();
+  limb_vec_t* ll_half = new_limb_list();
+  size_t i = 0;
+  
+  if (ll->length == 0) {
+    destroy_limb_list(ll_half);
+    return result;
+  }
+
+  while (!is_eq_one(ll)) {
+    if (is_even(ll)) {
+      // x / 2
+      right_shift(ll);
+    }
+    else {
+      // (3 x + 1) / 2 = x + (x + 1) / 2 = x + ((x + 1) >> 1)
+      // since x is odd: = x + (x >> 1) + 1 also works
+      copy_limb_list(ll_half, ll);
+      
+      // let's use optimized: x + ((x + 1) >> 1)
+      fused_increment_divide_by_two(ll_half);
+      add(ll, ll_half);
+      set_ith_bit(result, i);
+    }
+    i++;
+  }
+  set_ith_bit(result, i);
+  destroy_limb_list(ll_half);
+  return result;
+}
+
+limb_vec_t* collatz_decode(limb_vec_t* ll) {
+  limb_vec_t* result = new_limb_list();
+  size_t bit_length = get_bit_length(ll);
+  
+  pad_zero(result);
+  plus_one(result);
+
+  if (ll->length == 0) {
+    return result;
+  }
+  
+  for (size_t i = bit_length - 2; i != (~((size_t) 0)); i--) {
+    left_shift(result);
+    
+    if (get_ith_bit(ll, i) != 0) {
+      minus_one(result);
+      divide_by_three(result);
+    }
+  }
+  return result;
+}
 
 
 void test_limb_list() {
