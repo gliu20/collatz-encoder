@@ -151,11 +151,11 @@ void pad_to_length(limb_vec_t* ll, size_t length) {
   while (ll->length < length) pad_zero(ll);
 }
 
-void guard_against_empty(limb_ll_t* ll) {
+void guard_against_empty(limb_vec_t* ll) {
   if (ll->length == 0) pad_zero(ll);
 }
 
-void guard_against_overflow(limb_ll_t* ll) {
+void guard_against_overflow(limb_vec_t* ll) {
   if (ll->handle[LL_CIRCULAR_INDEX(ll, ll->length - 1u)] != 0) {
     pad_zero(ll);
   }
