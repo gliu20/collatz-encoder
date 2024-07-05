@@ -335,7 +335,6 @@ void encode_main(char* argv[]) {
 
     printf("\nread: %zu data units\n", actual_read);
     //print_limb_list(ll);
-    //printf("\n");
 
     limb_vec_t* collatz;
     
@@ -356,7 +355,7 @@ void encode_main(char* argv[]) {
     size_t data_units_written;
     
     for (size_t i = 0; i < collatz->length; i++) {
-      data_units_written= fwrite(&LL_INDEX(ll,i), sizeof(limb), 1, out_file);
+      data_units_written= fwrite(&LL_INDEX(collatz,i), sizeof(limb), 1, out_file);
       actual_write += data_units_written;
       if (data_units_written != 1) {
         fclose(in_file);
