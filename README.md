@@ -9,6 +9,5 @@ A fast arbitrary-precision unsigned integer arithmetic library written in C opti
 - Specialized dynamic array implementation using a circular buffer to allow `O(1)` inserts at both head and tail
 
 # Current work in progress
-- Rewriting to use dynamic arrays instead of linked lists
 - Enabling vectorization to allow SIMD optimizations
 - Parallelizing with OpenMP
