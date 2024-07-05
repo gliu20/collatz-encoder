@@ -37,6 +37,8 @@ void copy_limb_list(limb_vec_t* dest, limb_vec_t* src) {
 
   grow_limb_list_to_length(dest, src->length + 1);
 
+  dest->length = src->length;
+  
   for (size_t i = 0; i < src->length; i++) {
     LL_INDEX(dest, i) = LL_INDEX(src, i);
   }
