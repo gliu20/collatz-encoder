@@ -22,7 +22,12 @@ void guard_against_empty(limb_vec_t* ll) {
 
 void guard_against_overflow(limb_vec_t* ll) {
   canonicalize(ll);
-  if (LL_TAIL(ll) != 0 || ll->length == 0) {
+  // These need to be separate if statements to prevent OOB
+  // read by the LL_TAIL macro
+  if (ll->length == 0) {
+    pad_zero(ll);
+  }
+  if (LL_TAIL(ll) != 0) {
     pad_zero(ll);
   }
 }
