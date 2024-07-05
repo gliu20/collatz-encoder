@@ -4,7 +4,6 @@
 
 #define FOR_EACH_CARRY_PROPAGATE(LL, EXPR_I) do { \
   limb_t _carry = 0; \
-  _Pragma("clang loop distribute(enable)") \
   for (size_t i = 0; i < (LL)->length; i++) { \
     limb_t _result = (EXPR_I) + _carry; \
     LL_INDEX(LL, i) = _result % LIMB_BASE; \
