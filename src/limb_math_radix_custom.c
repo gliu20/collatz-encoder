@@ -52,8 +52,9 @@ void right_shift(limb_vec_t* ll) {
   guard_against_empty(ll);
   guard_against_overflow(ll);
 
+  // Most significant limb is 0, so use `len - 1` to prevent OOB read
   #pragma clang loop vectorize(enable)
-  for (size_t i = 0; i < ll->length; i++) {
+  for (size_t i = 0; i < ll->length - 1; i++) {
     LL_INDEX(ll, i) = (LL_INDEX(ll, i) / 2u) + (LL_INDEX(ll, i + 1) % 2u) * LIMB_DIVIDE_BY_TWO;
   }
 }
@@ -67,8 +68,9 @@ void divide_by_three(limb_vec_t* ll) {
   // \sum_{i=0}^{n} (a_i/3)b^i
   // = \sum_{i=0}^{n} \left( (a_i//3) + (a_{i+1}%3)(b/3) \right) b^i 
   // $$
+  // Most significant limb is 0, so use `len - 1` to prevent OOB read
   #pragma clang loop vectorize(enable)
-  for (size_t i = 0; i < ll->length; i++) {
+  for (size_t i = 0; i < ll->length - 1; i++) {
     LL_INDEX(ll, i) = (LL_INDEX(ll, i) / 3u) + (LL_INDEX(ll, i + 1) % 3u) * LIMB_DIVIDE_BY_THREE;
   }
 }
