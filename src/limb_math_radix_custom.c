@@ -17,6 +17,9 @@ while (0)
 
 
 void add(limb_vec_t* a, limb_vec_t* b) {
+  canonicalize(a);
+  canonicalize(b);
+
   // Use max + 1 to ensure room in case of overflow 
   size_t len = max(a->length, b->length) + 1;
   pad_to_length(a, len);
@@ -79,5 +82,7 @@ void fused_increment_divide_by_two(limb_vec_t* ll) {
   guard_against_empty(ll);
   guard_against_overflow(ll);
   
+  // This ensures that we stay within the true length of the list
+  ll->length--;
   FOR_EACH_CARRY_PROPAGATE(ll, (LL_INDEX(ll, i) / 2u) + (LL_INDEX(ll, i + 1) % 2u) * LIMB_DIVIDE_BY_TWO + (i == 0));
 }
