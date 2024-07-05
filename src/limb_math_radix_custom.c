@@ -48,6 +48,7 @@ void left_shift(limb_vec_t* ll) {
 
 void right_shift(limb_vec_t* ll) {
   // Ensures most significant limb is 0 so we dont have to do a check for the (i+1)-th index
+  canonicalize(ll);
   guard_against_overflow(ll);
 
   // Most significant limb is 0, so use `len - 1` to prevent OOB read
@@ -59,6 +60,7 @@ void right_shift(limb_vec_t* ll) {
 
 void divide_by_three(limb_vec_t* ll) {
   // Ensures most significant limb is 0 so we dont have to do a check for the (i+1)-th index
+  canonicalize(ll);
   guard_against_overflow(ll);
 
   // $$ 
@@ -74,6 +76,7 @@ void divide_by_three(limb_vec_t* ll) {
 
 void fused_increment_divide_by_two(limb_vec_t* ll) {
   // Ensures most significant limb is 0 so we dont have to do a check for the (i+1)-th index
+  canonicalize(ll);
   guard_against_overflow(ll);
   
   // This ensures that we stay within the true length of the list

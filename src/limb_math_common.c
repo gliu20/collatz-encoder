@@ -22,7 +22,6 @@ void guard_against_empty(limb_vec_t* ll) {
 }
 
 void guard_against_overflow(limb_vec_t* ll) {
-  canonicalize(ll);
   // These need to be separate if statements to prevent OOB
   // read by the LL_TAIL macro
   if (ll->length == 0) {
