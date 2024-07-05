@@ -101,10 +101,8 @@ void insert_at_tail(limb_vec_t* ll, limb_t limb) {
   ll->handle[LL_CIRCULAR_INDEX(ll, ll->length)] = limb;
   ll->length++;
 
-  if (ll->length > LL_POWER_2_TO_SIZE(ll->size_power_2)) {
-    print_trace();
-    errx(EXIT_FAILURE, "insert at tail overflowed container\n");
-  }
+  assert(!(ll->length > LL_POWER_2_TO_SIZE(ll->size_power_2)) && 
+    "insert at tail overflowed container");
 }
 
 void insert_at_head(limb_vec_t* ll, limb_t limb) {
@@ -113,26 +111,18 @@ void insert_at_head(limb_vec_t* ll, limb_t limb) {
   ll->head_offset = head_index;
   ll->length++;
 
-  if (ll->length > LL_POWER_2_TO_SIZE(ll->size_power_2)) {
-    print_trace();
-    errx(EXIT_FAILURE, "insert at head overflowed container\n");
-  }
+  assert(!(ll->length > LL_POWER_2_TO_SIZE(ll->size_power_2)) && 
+    "insert at head overflowed container");
 }
 
 void remove_at_tail(limb_vec_t* ll) {
-  if (ll->length == 0) {
-    print_trace();
-    errx(EXIT_FAILURE, "cannot remove at tail from empty list\n");
-  }
+  assert(ll->length != 0 && "cannot remove at tail from empty list");
   LL_TAIL(ll) = 0;
   ll->length--;
 }
 
 void remove_at_head(limb_vec_t* ll) {
-  if (ll->length == 0) {
-    print_trace();
-    errx(EXIT_FAILURE, "cannot remove at head from empty list\n");
-  }
+  assert(ll->length != 0 && "cannot remove at head from empty list");
   LL_HEAD(ll) = 0;
   ll->head_offset++;
   ll->length--;
