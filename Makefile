@@ -7,12 +7,12 @@ CC = clang
 WARNFLAGS = -Wall -Wextra -Wpedantic -Wno-strict-prototypes -Wno-declaration-after-statement -Wno-missing-prototypes -Wno-unsafe-buffer-usage -Weverything
 DEBUGFLAGS = -g -fno-omit-frame-pointer
 RELEASEFLAGS = -O3 -flto -march=native -mtune=native -mllvm -unroll-count=32
-ASANFLAGS = -O2 -fadddress=sanitize
+ASANFLAGS = -O2 -fsanitize=address
 
 # build: $(WARNFLAGS) $(RELEASEFLAGS)
 # asan: $(WARNFLAGS) $(DEBUGFLAGS) $(ASANFLAGS)
 # debug: $(WARNFLAGS) $(DEBUGFLAGS)
-CFLAGS = -I$(INCDIR) $(WARNFLAGS) $(DEBUGFLAGS)
+CFLAGS = -I$(INCDIR) $(WARNFLAGS) $(DEBUGFLAGS) $(ASANFLAGS)
 
 SRCS := $(wildcard $(SRCDIR)/*.c)
 OBJS := $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SRCS))
