@@ -38,7 +38,7 @@ void copy_limb_list(limb_vec_t* dest, limb_vec_t* src) {
   dest->head_offset = LIMB_LIST_INITIAL_HEAD_OFFSET;
   dest->length = 0;
 
-  grow_limb_list_to_length(dest, src->length + 1);
+  resize_limb_list_to_length(dest, src->length + 1);
 
   dest->length = src->length;
 
@@ -83,6 +83,30 @@ bool shrink_limb_list(limb_vec_t* ll) {
   ll->size_power_2 = new_size;
 
   return true;
+}
+
+void resize_limb_list_to_length(limb_vec_t* ll, size_t length) {
+  bool fits_desired_len = LL_POWER_2_TO_SIZE(ll->size_power_2) > length;
+  bool is_oversized = (length << 2) > LL_POWER_2_TO_SIZE(ll->size_power_2);
+
+  // Content already fits nicely so lets avoid resizing
+  if (fits_desired_len && !is_oversized) return; 
+
+  // Allocate ceiling of power of two that would fit requested length
+  size_t new_size = sizeof(size_t) * 8 - __builtin_clzll(length) + 1;
+  limb_t* new_handle = new_limb_handle(new_size);
+
+  assert(LL_POWER_2_TO_SIZE(new_size) >= length && "resized container should fit required length");
+  
+  // Copy elements to new buffer
+  for (size_t i = 0; i < ll->length; i++) {
+    new_handle[LL_CIRCULAR_INDEX_MASK(ll, i, LL_POWER_2_TO_MASK(new_size))] = 
+      ll->handle[LL_CIRCULAR_INDEX(ll, i)];
+  }
+  
+  free(ll->handle);
+  ll->handle = new_handle;
+  ll->size_power_2 = new_size;
 }
 
 void grow_limb_list_to_length(limb_vec_t* ll, size_t length) {

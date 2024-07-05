@@ -37,6 +37,7 @@ void copy_limb_list(limb_vec_t* dest, limb_vec_t* src);
 
 void grow_limb_list(limb_vec_t* ll);
 bool shrink_limb_list(limb_vec_t* ll);
+void resize_limb_list_to_length(limb_vec_t* ll, size_t length);
 void grow_limb_list_to_length(limb_vec_t* ll, size_t length);
 void shrink_limb_list_to_length(limb_vec_t* ll, size_t length);
 

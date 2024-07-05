@@ -8,12 +8,13 @@ bool is_even(limb_vec_t* ll) {
 }
 
 void pad_zero(limb_vec_t* ll) {
-  grow_limb_list_to_length(ll, ll->length + 1);
+  resize_limb_list_to_length(ll, ll->length + 1);
   insert_at_tail(ll, 0);
 }
 
 void pad_to_length(limb_vec_t* ll, size_t length) {
-  while (ll->length < length) pad_zero(ll);
+  resize_limb_list_to_length(ll, length + 1);
+  while (ll->length < length) insert_at_tail(ll, 0);
 }
 
 void guard_against_empty(limb_vec_t* ll) {
