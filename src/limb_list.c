@@ -1,6 +1,8 @@
 
 #include <assert.h>
 #include <stdio.h>
+
+#include "debug.h"
 #include "limb_list.h"
 
 limb_t* new_limb_handle(size_t size_power_2) {
@@ -24,7 +26,7 @@ limb_vec_t* new_limb_list() {
 
 void canonicalize(limb_vec_t* ll) {
   if (ll->length == 0) return;
-  while (LL_TAIL(ll) == 0) {
+  while (LL_TAIL(ll) == 0 && ll->length != 0) {
     remove_at_tail(ll);
   }
 }
@@ -38,7 +40,7 @@ void copy_limb_list(limb_vec_t* dest, limb_vec_t* src) {
   grow_limb_list_to_length(dest, src->length + 1);
 
   dest->length = src->length;
-  
+
   for (size_t i = 0; i < src->length; i++) {
     LL_INDEX(dest, i) = LL_INDEX(src, i);
   }
@@ -83,8 +85,9 @@ bool shrink_limb_list(limb_vec_t* ll) {
 }
 
 void grow_limb_list_to_length(limb_vec_t* ll, size_t length) {
-  while (LL_POWER_2_TO_SIZE(ll->size_power_2) <= length)
+  while (LL_POWER_2_TO_SIZE(ll->size_power_2) <= length) {
     grow_limb_list(ll);
+  }
 }
 
 void shrink_limb_list_to_length(limb_vec_t* ll, size_t length) {
@@ -97,6 +100,11 @@ void shrink_limb_list_to_length(limb_vec_t* ll, size_t length) {
 void insert_at_tail(limb_vec_t* ll, limb_t limb) {
   ll->handle[LL_CIRCULAR_INDEX(ll, ll->length)] = limb;
   ll->length++;
+
+  if (ll->length > LL_POWER_2_TO_SIZE(ll->size_power_2)) {
+    print_trace();
+    errx(EXIT_FAILURE, "insert at tail overflowed container\n");
+  }
 }
 
 void insert_at_head(limb_vec_t* ll, limb_t limb) {
@@ -104,14 +112,27 @@ void insert_at_head(limb_vec_t* ll, limb_t limb) {
   ll->handle[head_index] = limb;
   ll->head_offset = head_index;
   ll->length++;
+
+  if (ll->length > LL_POWER_2_TO_SIZE(ll->size_power_2)) {
+    print_trace();
+    errx(EXIT_FAILURE, "insert at head overflowed container\n");
+  }
 }
 
 void remove_at_tail(limb_vec_t* ll) {
+  if (ll->length == 0) {
+    print_trace();
+    errx(EXIT_FAILURE, "cannot remove at tail from empty list\n");
+  }
   LL_TAIL(ll) = 0;
   ll->length--;
 }
 
 void remove_at_head(limb_vec_t* ll) {
+  if (ll->length == 0) {
+    print_trace();
+    errx(EXIT_FAILURE, "cannot remove at head from empty list\n");
+  }
   LL_HEAD(ll) = 0;
   ll->head_offset++;
   ll->length--;
