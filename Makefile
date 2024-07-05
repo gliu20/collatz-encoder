@@ -5,7 +5,7 @@ OBJDIR = obj
 CC = clang
 
 WARNFLAGS = -Wall -Wextra -Wpedantic -Wno-strict-prototypes -Wno-declaration-after-statement -Wno-missing-prototypes -Wno-unsafe-buffer-usage -Weverything
-DEBUGFLAGS = -g -fno-omit-frame-pointer
+DEBUGFLAGS = -g -fno-omit-frame-pointer -rdynamic
 RELEASEFLAGS = -O3 -flto -march=native -mtune=native -mllvm -unroll-count=32
 ASANFLAGS = -O2 -fsanitize=address
 
