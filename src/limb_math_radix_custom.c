@@ -29,21 +29,18 @@ void add(limb_vec_t* a, limb_vec_t* b) {
 }
 
 void plus_one(limb_vec_t* ll) {
-  guard_against_empty(ll);
   guard_against_overflow(ll);
   
   FOR_EACH_CARRY_PROPAGATE(ll, LL_INDEX(ll, i) + (i == 0));
 }
 
 void minus_one(limb_vec_t* ll) {
-  guard_against_empty(ll);
   guard_against_overflow(ll);
   
   FOR_EACH_CARRY_PROPAGATE(ll, LL_INDEX(ll, i) + LIMB_MAX_VAL);
 }
 
 void left_shift(limb_vec_t* ll) {
-  guard_against_empty(ll);
   guard_against_overflow(ll);
   
   FOR_EACH_CARRY_PROPAGATE(ll, LL_INDEX(ll, i) << 1u);
@@ -51,7 +48,6 @@ void left_shift(limb_vec_t* ll) {
 
 void right_shift(limb_vec_t* ll) {
   // Ensures most significant limb is 0 so we dont have to do a check for the (i+1)-th index
-  guard_against_empty(ll);
   guard_against_overflow(ll);
 
   // Most significant limb is 0, so use `len - 1` to prevent OOB read
@@ -63,7 +59,6 @@ void right_shift(limb_vec_t* ll) {
 
 void divide_by_three(limb_vec_t* ll) {
   // Ensures most significant limb is 0 so we dont have to do a check for the (i+1)-th index
-  guard_against_empty(ll);
   guard_against_overflow(ll);
 
   // $$ 
@@ -79,7 +74,6 @@ void divide_by_three(limb_vec_t* ll) {
 
 void fused_increment_divide_by_two(limb_vec_t* ll) {
   // Ensures most significant limb is 0 so we dont have to do a check for the (i+1)-th index
-  guard_against_empty(ll);
   guard_against_overflow(ll);
   
   // This ensures that we stay within the true length of the list
