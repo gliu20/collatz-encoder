@@ -1,3 +1,5 @@
+
+#include "debug.h"
 #include "limb_math_common.h"
 
 bool is_even(limb_vec_t* ll) {
@@ -19,6 +21,7 @@ void guard_against_empty(limb_vec_t* ll) {
 }
 
 void guard_against_overflow(limb_vec_t* ll) {
+  canonicalize(ll);
   if (LL_TAIL(ll) != 0) {
     pad_zero(ll);
   }
