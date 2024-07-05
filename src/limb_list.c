@@ -26,8 +26,9 @@ limb_vec_t* new_limb_list() {
 
 void canonicalize(limb_vec_t* ll) {
   if (ll->length == 0) return;
-  while (LL_TAIL(ll) == 0 && ll->length != 0) {
-    remove_at_tail(ll);
+  for (size_t i = ll->length - 1; i != 0; i--) {
+    if (LL_INDEX(ll, i) != 0) break;
+    ll->length--;
   }
 }
 
