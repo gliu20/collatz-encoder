@@ -13,6 +13,11 @@
 #define LL_CIRCULAR_INDEX(LL, I) (LL_CIRCULAR_INDEX_MASK(LL, I, LL_POWER_2_TO_MASK((LL)->size_power_2)))
 
 #define LL_INDEX(LL, I) (LL)->handle[LL_CIRCULAR_INDEX(LL, I)]
+
+/**
+ * Pay special attention to the LL_TAIL macro;
+ * make sure you don't access OOB if ll->length is 0
+ */
 #define LL_HEAD(LL) LL_INDEX(LL, 0)
 #define LL_TAIL(LL) LL_INDEX(LL, (LL)->length - 1u)
 

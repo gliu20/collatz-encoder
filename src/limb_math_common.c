@@ -22,7 +22,7 @@ void guard_against_empty(limb_vec_t* ll) {
 
 void guard_against_overflow(limb_vec_t* ll) {
   canonicalize(ll);
-  if (LL_TAIL(ll) != 0) {
+  if (LL_TAIL(ll) != 0 || ll->length == 0) {
     pad_zero(ll);
   }
 }
