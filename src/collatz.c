@@ -74,6 +74,120 @@ limb_vec_t* collatz_decode(limb_vec_t* ll) {
 }
 
 
+int test() {
+  limb_vec_t* ll = new_limb_list();
+  limb_vec_t* input = new_limb_list();
+  insert_at_tail(ll, 1);
+  
+  LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
+    for (size_t i = 0; i < 256*256*12; i++) {
+
+      copy_limb_list(input, ll);
+      limb_vec_t* collatz = collatz_encode(input);
+      limb_vec_t* uncollatz = collatz_decode(collatz);
+      canonicalize(uncollatz);
+      
+      if (!is_eq(ll, uncollatz)) {
+        printf("\nmain: input: ");
+        print_limb_list(input);
+        printf("\nmain: collatz: ");
+        print_limb_list(collatz);
+        printf("\nmain: uncollatz: ");
+        print_limb_list(uncollatz);
+        printf("\n");
+        errx(EXIT_FAILURE, "err: collatz mismatch");
+      }
+      
+      destroy_limb_list(collatz);
+      destroy_limb_list(uncollatz);
+      
+      plus_one(ll);
+    }
+    
+    destroy_limb_list(ll);
+    destroy_limb_list(input);
+  }
+
+  return 0;
+}
+
+int test_range() {
+  limb_vec_t* ll = new_limb_list();
+  limb_vec_t* input = new_limb_list();
+  insert_at_tail(ll, 3);
+  
+  LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
+    for (size_t i = 0; i < 256*256*12; i++) {
+
+      copy_limb_list(input, ll);
+      limb_vec_t* collatz = collatz_encode(input);
+      limb_vec_t* uncollatz = collatz_decode(collatz);
+      canonicalize(uncollatz);
+      
+      if (!is_eq(ll, uncollatz)) {
+        printf("\nmain: input: ");
+        print_limb_list(ll);
+        printf("\nmain: collatz: ");
+        print_limb_list(collatz);
+        printf("\nmain: uncollatz: ");
+        print_limb_list(uncollatz);
+        printf("\n");
+        errx(EXIT_FAILURE, "err: collatz mismatch");
+      }
+      
+      destroy_limb_list(collatz);
+      destroy_limb_list(uncollatz);
+      
+      left_shift(ll);
+      minus_one(ll);
+    }
+    
+    destroy_limb_list(ll);
+    destroy_limb_list(input);
+  }
+
+  return 0;
+}
+
+int test_range2() {
+  limb_vec_t* ll = new_limb_list();
+  limb_vec_t* input = new_limb_list();
+  insert_at_tail(ll, 1);
+  
+  LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
+    for (size_t i = 0; i < 256*256*12; i++) {
+
+      copy_limb_list(input, ll);
+      limb_vec_t* collatz = collatz_encode(input);
+      limb_vec_t* uncollatz = collatz_decode(collatz);
+      canonicalize(uncollatz);
+      
+      if (!is_eq(ll, uncollatz)) {
+        printf("\nmain: input: ");
+        print_limb_list(ll);
+        printf("\nmain: collatz: ");
+        print_limb_list(collatz);
+        printf("\nmain: uncollatz: ");
+        print_limb_list(uncollatz);
+        printf("\n");
+        errx(EXIT_FAILURE, "err: collatz mismatch");
+      }
+      
+      destroy_limb_list(collatz);
+      destroy_limb_list(uncollatz);
+      
+      left_shift(ll);
+      plus_one(ll);
+    }
+    
+    destroy_limb_list(ll);
+    destroy_limb_list(input);
+  }
+
+  return 0;
+}
+
+
 void test_limb_list() {
   limb_vec_t* ll = new_limb_list();
   printf("empty: ");
@@ -129,6 +243,6 @@ void test_limb_list() {
 }
 
 int main() {
-  test_limb_list();
+  test();
   return 0;
 }
