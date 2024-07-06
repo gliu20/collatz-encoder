@@ -93,7 +93,7 @@ void resize_limb_list_to_length(limb_vec_t* ll, size_t length) {
   if (fits_desired_len && !is_oversized) return; 
 
   // Allocate ceiling of power of two that would fit requested length
-  size_t new_size = sizeof(size_t) * 8 - __builtin_clzll(length) + 1;
+  size_t new_size = sizeof(size_t) * 8u - (size_t) __builtin_clzll(length) + 1u;
   limb_t* new_handle = new_limb_handle(new_size);
 
   assert(LL_POWER_2_TO_SIZE(new_size) >= length && "resized container should fit required length");
