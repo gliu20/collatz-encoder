@@ -243,7 +243,7 @@ void test_limb_list() {
 
 void print_usage(char* prog_name) {
   fprintf(stderr, "Usage: %s <encode|decode> <input_file> <output_file>\n", prog_name);
-  fprintf(stderr, "Usage: %s <test> <0|1|2>\n", prog_name);
+  fprintf(stderr, "Usage: %s <test>\n", prog_name);
 }
 
 
@@ -372,11 +372,20 @@ void encode_main(char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
-  //test_range2();
-  //return 0;
-  //test_range();
   if (argc != 4 && argc != 3) {
     print_usage(argv[0]);
+    return 0;
+  }
+
+  if (argc == 3) {
+    if (*argv[1] == 't') {
+      test();
+      test_range();
+      test_range2();
+    }
+    else {
+      print_usage(argv[0]);
+    }
     return 0;
   }
   
