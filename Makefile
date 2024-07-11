@@ -15,7 +15,7 @@ RELEASEFLAGS = -O3 -flto -DNDEBUG -march=native -mtune=native -fprofile-instr-us
 # build: $(WARNFLAGS) $(RELEASEFLAGS)
 # asan: $(WARNFLAGS) $(DEBUGFLAGS) $(ASANFLAGS)
 # debug: $(WARNFLAGS) $(DEBUGFLAGS)
-CFLAGS = -I$(INCDIR) $(WARNFLAGS) $(DEBUGFLAGS) $(RELEASEFLAGS)   #-O2 -DNDEBUG
+CFLAGS = -I$(INCDIR) $(WARNFLAGS) $(DEBUGFLAGS) $(RELEASEFLAGS) -fopenmp
 OPTFLAGS = -mllvm -unroll-count=8
 LDFLAGS = -rdynamic -flto
 
