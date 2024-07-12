@@ -1,5 +1,5 @@
-#include "limb_math_common.h"
-#include "limb_math_radix_pow2.h"
+#include "limb_radix_common.h"
+#include "limb_radix_pow2.h"
 
 void set_ith_bit(limb_vec_t* ll, size_t bit_index) {
     size_t desired_limb = bit_index / LIMB_CONTAINER_BIT_LENGTH;

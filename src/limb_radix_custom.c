@@ -1,6 +1,6 @@
 
-#include "limb_math_common.h"
-#include "limb_math_radix_custom.h"
+#include "limb_radix_common.h"
+#include "limb_radix_custom.h"
 
 #define FOR_EACH_CARRY_PROPAGATE(LL, EXPR_I) do { \
   limb_t _carry = 0; \
