@@ -56,7 +56,7 @@ void remove_at_tail(limb_dlist_t* ll) {
 }
 
 void resize_limb_list(limb_dlist_t* ll, size_t container_size) {
-  limb_t* new_handle = realloc(ll->handle, container_size);
+  limb_t* new_handle = realloc(ll->handle, container_size * sizeof(limb_t));
   assert(new_handle != NULL 
     && "oom: failed to re-allocate new limb memory");
   assert(IS_POWER_OF_TWO(container_size) 
