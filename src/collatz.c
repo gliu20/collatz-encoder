@@ -22,9 +22,11 @@
 
 limb_dlist_t* collatz_encode(limb_dlist_t* ll) {
   limb_dlist_t* result = new_limb_list();
+  limb_dlist_t* ll_half = new_limb_list();
   size_t i = 0;
   
   if (ll->length == 0) {
+    destroy_limb_list(ll_half);
     return result;
   }
 
@@ -34,15 +36,19 @@ limb_dlist_t* collatz_encode(limb_dlist_t* ll) {
       right_shift(ll);
     }
     else {
-      // (3 x + 1) / 2
-      multiply_by_three_and_increment(ll);
-      right_shift(ll);
+      // (3 x + 1) / 2 = x + (x + 1) / 2 = x + ((x + 1) >> 1)
+      // since x is odd: = x + (x >> 1) + 1 also works
+      copy_limb_list(ll_half, ll);
+      
+      // let's use optimized: x + ((x + 1) >> 1)
+      fused_increment_divide_by_two(ll_half);
+      add(ll, ll_half);
       set_ith_bit(result, i);
     }
     i++;
   }
   set_ith_bit(result, i);
-  
+  destroy_limb_list(ll_half);
   return result;
 }
 
