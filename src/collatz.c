@@ -266,12 +266,14 @@ void encode_main(char* argv[]) {
 
     //print_limb_list(ll);
 
-    limb_dlist_t* collatz;
+    limb_dlist_t* collatz = NULL;
     
     if (*argv[1] == 'e') {
+      LOG_EXECUTION_TIME("collatz: %f seconds\n")
       collatz = collatz_encode(ll);
     }
     else if (*argv[1] == 'd') {
+      LOG_EXECUTION_TIME("collatz: %f seconds\n")
       collatz = collatz_decode(ll);
     }
     else {

@@ -27,7 +27,7 @@ size_t read_file(limb_dlist_t* ll, FILE *file) {
         // count as part of the length of the mini_limb
         mini_limb_len--;
 
-        printf("info: read eof %zu bytes\n", mini_limb_len);
+        printf("info: read %zu eof bytes\n", mini_limb_len);
 
         // Reconstruct limb from mini limb
         limb = 0;
@@ -86,7 +86,7 @@ size_t write_file(limb_dlist_t* ll, FILE *file) {
     mini_limb_len--;
   }
 
-  printf("info: got length %zu\n", mini_limb_len);
+  printf("info: wrote %zu eof bytes\n", mini_limb_len);
 
   // Write the mini-limbs byte by byte
   for (size_t i = 0; i < mini_limb_len; i++) {
