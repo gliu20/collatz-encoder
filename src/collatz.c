@@ -262,7 +262,7 @@ void encode_main(char* argv[]) {
       printf("err: failed to read from file");
       break;
     }
-    printf("\nread: %zu data units\n", bytes_read);
+    printf("\nread: %zu bytes\n", bytes_read);
 
     //print_limb_list(ll);
 
@@ -286,7 +286,7 @@ void encode_main(char* argv[]) {
       break;
     }
 
-    printf("\nwrite: %zu data units\n", bytes_write);
+    printf("\nwrite: %zu bytes\n", bytes_write);
 
     destroy_limb_list(ll);
     destroy_limb_list(collatz);
