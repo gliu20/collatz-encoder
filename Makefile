@@ -16,8 +16,8 @@ RELEASEFLAGS = -O3 -flto -DNDEBUG -march=native -mtune=native -fprofile-instr-us
 # asan: $(WARNFLAGS) $(DEBUGFLAGS) $(ASANFLAGS)
 # debug: $(WARNFLAGS) $(DEBUGFLAGS)
 CFLAGS = -I$(INCDIR) $(WARNFLAGS) $(DEBUGFLAGS) $(RELEASEFLAGS) -fopenmp
-OPTFLAGS = -mllvm -unroll-count=8
-LDFLAGS = -rdynamic -flto
+OPTFLAGS = -mllvm -unroll-count=4
+LDFLAGS = -rdynamic
 
 SRCS := $(wildcard $(SRCDIR)/*.c)
 OBJS := $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SRCS))
