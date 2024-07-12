@@ -1,6 +1,7 @@
 #include "limb.h"
 #include "limb_file.h"
 #include "limb_dlist.h"
+#include "limb_radix_convert.h"
 #include "limb_radix_common.h"
 #include "limb_radix_pow2.h"
 #include "limb_radix_custom.h"
@@ -103,6 +104,50 @@ int test() {
       destroy_limb_list(collatz);
       destroy_limb_list(uncollatz);
       
+      plus_one(ll);
+    }
+    
+    destroy_limb_list(ll);
+    destroy_limb_list(input);
+  }
+
+  return 0;
+}
+
+
+
+int test_convert() {
+  limb_dlist_t* ll = new_limb_list();
+  limb_dlist_t* input = new_limb_list();
+  insert_at_tail(ll, 1);
+  
+  LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
+    for (size_t i = 0; i < 256*12; i++) {
+
+      copy_limb_list(input, ll);
+      limb_dlist_t* pow2 = new_limb_list();
+      limb_dlist_t* custom = new_limb_list();
+
+      to_radix_pow2(pow2, input);
+      to_radix_custom(custom, pow2);
+      canonicalize(custom);
+
+      if (!is_eq(ll, custom)) {
+        printf("main: input: ");
+        print_limb_list(ll);
+        printf("main: to_pow2: ");
+        print_limb_list(pow2);
+        printf("main: to_custom: ");
+        print_limb_list(custom);
+        printf("\n");
+        errx(EXIT_FAILURE, "err: radix mismatch");
+      }
+      
+      destroy_limb_list(pow2);
+      destroy_limb_list(custom);
+      
+      left_shift(ll);
+      plus_one(ll);
       plus_one(ll);
     }
     
@@ -305,6 +350,7 @@ int main(int argc, char* argv[]) {
 
   if (argc == 2) {
     if (*argv[1] == 't') {
+      test_convert();
       test();
       test_range();
       test_range2();
