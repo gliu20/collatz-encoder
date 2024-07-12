@@ -122,7 +122,7 @@ int test_convert() {
   insert_at_tail(ll, 1);
   
   LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
-    for (size_t i = 0; i < 256*12; i++) {
+    for (size_t i = 0; i < 256*256*256; i++) {
 
       copy_limb_list(input, ll);
       limb_dlist_t* pow2 = new_limb_list();
@@ -146,8 +146,6 @@ int test_convert() {
       destroy_limb_list(pow2);
       destroy_limb_list(custom);
       
-      left_shift(ll);
-      plus_one(ll);
       plus_one(ll);
     }
     
@@ -311,15 +309,26 @@ void encode_main(char* argv[]) {
 
     //print_limb_list(ll);
 
-    limb_dlist_t* collatz = NULL;
     
     if (*argv[1] == 'e') {
-      LOG_EXECUTION_TIME("collatz: %f seconds\n")
-      collatz = collatz_encode(ll);
+      limb_dlist_t* buffer = new_limb_list();
+
+      to_radix_custom(buffer, ll);
+      destroy_limb_list(ll);
+      ll = collatz_encode(buffer);
+      to_radix_pow2(buffer, ll);
+      swap_limb_list(buffer, ll);
+      destroy_limb_list(buffer);
     }
     else if (*argv[1] == 'd') {
-      LOG_EXECUTION_TIME("collatz: %f seconds\n")
-      collatz = collatz_decode(ll);
+      limb_dlist_t* buffer = new_limb_list();
+
+      to_radix_custom(buffer, ll);
+      destroy_limb_list(ll);
+      ll = collatz_decode(buffer);
+      to_radix_pow2(buffer, ll);
+      swap_limb_list(buffer, ll);
+      destroy_limb_list(buffer);
     }
     else {
       print_usage(argv[0]);
@@ -327,9 +336,9 @@ void encode_main(char* argv[]) {
       break;
     }
     
-    canonicalize(collatz);
+    canonicalize(ll);
     
-    size_t bytes_write = write_file(collatz, out_file);
+    size_t bytes_write = write_file(ll, out_file);
     if (bytes_write == __SIZE_MAX__) {
       printf("err: failed to write to file");
       break;
@@ -338,7 +347,6 @@ void encode_main(char* argv[]) {
     printf("\nwrite: %zu bytes\n", bytes_write);
 
     destroy_limb_list(ll);
-    destroy_limb_list(collatz);
   }
 }
 
