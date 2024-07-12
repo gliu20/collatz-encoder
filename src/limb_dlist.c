@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include "limb_dlist.h"
 
@@ -34,11 +35,12 @@ limb_dlist_t* new_limb_list() {
 
 void canonicalize(limb_dlist_t* ll) {
   if (ll->length == 0) return;
-  // note this logic intentionally skips the head
-  for (size_t i = ll->length - 1; i != 0; i--) {
+  for (size_t i = ll->length - 1; i != __SIZE_MAX__; i--) {
     if (ll->handle[i] != 0) break;
     ll->length--;
   }
+  assert((ll->length <= ll->container_size) 
+    && "oob: canonicalize overflowed length");
 }
 
 void insert_at_tail(limb_dlist_t* ll, limb_t limb) {
