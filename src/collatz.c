@@ -280,6 +280,8 @@ void encode_main(char* argv[]) {
       break;
     }
     
+    canonicalize(collatz);
+    
     size_t bytes_write = write_file(collatz, out_file);
     if (bytes_write == __SIZE_MAX__) {
       printf("err: failed to write to file");
