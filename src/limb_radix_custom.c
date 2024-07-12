@@ -89,7 +89,6 @@ void divide_by_three(limb_dlist_t* ll) {
 }
 
 void multiply_by_three(limb_dlist_t* ll) {
-
   // Ensure most significant limb is 0
   canonicalize(ll);
   guard_against_overflow(ll);
@@ -97,6 +96,8 @@ void multiply_by_three(limb_dlist_t* ll) {
 
   limb_t carry = 0;
   for (size_t i = 0; i < ll->length; i++) {
+    // We have to split out into two separate parts in order
+    // to avoid overflow due to multiplication
     limb_t lshift = (LL_INDEX(ll, i) << 1u) + carry;
     limb_t lshift_mod = lshift % LIMB_BASE;
     limb_t lshift_div = lshift / LIMB_BASE;
@@ -110,7 +111,31 @@ void multiply_by_three(limb_dlist_t* ll) {
 
     carry = lshift_div + triple_div;
   }
+}
 
+void multiply_by_three_and_increment(limb_dlist_t* ll) {
+  // Ensure most significant limb is 0
+  canonicalize(ll);
+  guard_against_overflow(ll);
+  
+
+  limb_t carry = 1;
+  for (size_t i = 0; i < ll->length; i++) {
+    // We have to split out into two separate parts in order
+    // to avoid overflow due to multiplication
+    limb_t lshift = (LL_INDEX(ll, i) << 1u) + carry;
+    limb_t lshift_mod = lshift % LIMB_BASE;
+    limb_t lshift_div = lshift / LIMB_BASE;
+
+
+    limb_t triple = lshift_mod + LL_INDEX(ll, i);
+    limb_t triple_mod = triple % LIMB_BASE;
+    limb_t triple_div = triple / LIMB_BASE;
+
+    LL_INDEX(ll, i) = triple_mod;
+
+    carry = lshift_div + triple_div;
+  }
 }
 
 void divide_by_three_optim(limb_dlist_t* ll, limb_dlist_t* buffer) {
