@@ -12,11 +12,10 @@
 } \
 while (0)
 
-
 #define max(a,b) ((a) > (b) ? (a) : (b))
 
 
-void add(limb_vec_t* a, limb_vec_t* b) {
+void add(limb_dlist_t* a, limb_dlist_t* b) {
   canonicalize(a);
   canonicalize(b);
 
@@ -28,25 +27,25 @@ void add(limb_vec_t* a, limb_vec_t* b) {
   FOR_EACH_CARRY_PROPAGATE(a, LL_INDEX(a, i) + LL_INDEX(b, i));
 }
 
-void plus_one(limb_vec_t* ll) {
+void plus_one(limb_dlist_t* ll) {
   guard_against_overflow(ll);
   
   FOR_EACH_CARRY_PROPAGATE(ll, LL_INDEX(ll, i) + (i == 0));
 }
 
-void minus_one(limb_vec_t* ll) {
+void minus_one(limb_dlist_t* ll) {
   guard_against_overflow(ll);
   
   FOR_EACH_CARRY_PROPAGATE(ll, LL_INDEX(ll, i) + LIMB_MAX_VAL);
 }
 
-void left_shift(limb_vec_t* ll) {
+void left_shift(limb_dlist_t* ll) {
   guard_against_overflow(ll);
   
   FOR_EACH_CARRY_PROPAGATE(ll, LL_INDEX(ll, i) << 1u);
 }
 
-void right_shift(limb_vec_t* ll) {
+void right_shift(limb_dlist_t* ll) {
   // Ensures most significant limb is 0 so we dont have to do a check for the (i+1)-th index
   canonicalize(ll);
   guard_against_overflow(ll);
@@ -58,7 +57,7 @@ void right_shift(limb_vec_t* ll) {
   }
 }
 
-void divide_by_three(limb_vec_t* ll) {
+void divide_by_three(limb_dlist_t* ll) {
   // Ensures most significant limb is 0 so we dont have to do a check for the (i+1)-th index
   canonicalize(ll);
   guard_against_overflow(ll);
@@ -74,7 +73,7 @@ void divide_by_three(limb_vec_t* ll) {
   }
 }
 
-void fused_increment_divide_by_two(limb_vec_t* ll) {
+void fused_increment_divide_by_two(limb_dlist_t* ll) {
   // Ensures most significant limb is 0 so we dont have to do a check for the (i+1)-th index
   canonicalize(ll);
   guard_against_overflow(ll);
