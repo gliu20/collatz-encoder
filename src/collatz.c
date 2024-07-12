@@ -1,14 +1,15 @@
 #include "limb.h"
-#include "limb_list.h"
-#include "limb_math_common.h"
-#include "limb_math_radix_pow2.h"
-#include "limb_math_radix_custom.h"
+#include "limb_dlist.h"
+#include "limb_radix_common.h"
+#include "limb_radix_pow2.h"
+#include "limb_radix_custom.h"
 
 #include <err.h>
 #include <time.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <limits.h>
 
 #define DEFER(...) for (int _i = 1; _i; _i = 0, __VA_ARGS__)
 
@@ -19,9 +20,9 @@
   printf((STR), (double) (_end - _start) / CLOCKS_PER_SEC))
 
 
-limb_vec_t* collatz_encode(limb_vec_t* ll) {
-  limb_vec_t* result = new_limb_list();
-  limb_vec_t* ll_half = new_limb_list();
+limb_dlist_t* collatz_encode(limb_dlist_t* ll) {
+  limb_dlist_t* result = new_limb_list();
+  limb_dlist_t* ll_half = new_limb_list();
   size_t i = 0;
   
   if (ll->length == 0) {
@@ -51,8 +52,8 @@ limb_vec_t* collatz_encode(limb_vec_t* ll) {
   return result;
 }
 
-limb_vec_t* collatz_decode(limb_vec_t* ll) {
-  limb_vec_t* result = new_limb_list();
+limb_dlist_t* collatz_decode(limb_dlist_t* ll) {
+  limb_dlist_t* result = new_limb_list();
   size_t bit_length = get_bit_length(ll);
   
   pad_zero(result);
@@ -62,7 +63,7 @@ limb_vec_t* collatz_decode(limb_vec_t* ll) {
     return result;
   }
 
-  for (size_t i = bit_length - 2; i != (~((size_t) 0)); i--) {
+  for (size_t i = bit_length - 2; i != __SIZE_MAX__; i--) {
     left_shift(result);
     
     if (get_ith_bit(ll, i) != 0) {
@@ -75,16 +76,16 @@ limb_vec_t* collatz_decode(limb_vec_t* ll) {
 
 
 int test() {
-  limb_vec_t* ll = new_limb_list();
-  limb_vec_t* input = new_limb_list();
+  limb_dlist_t* ll = new_limb_list();
+  limb_dlist_t* input = new_limb_list();
   insert_at_tail(ll, 1);
   
   LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
     for (size_t i = 0; i < 256*256*12; i++) {
 
       copy_limb_list(input, ll);
-      limb_vec_t* collatz = collatz_encode(input);
-      limb_vec_t* uncollatz = collatz_decode(collatz);
+      limb_dlist_t* collatz = collatz_encode(input);
+      limb_dlist_t* uncollatz = collatz_decode(collatz);
       canonicalize(uncollatz);
 
       if (!is_eq(ll, uncollatz)) {
@@ -112,15 +113,15 @@ int test() {
 }
 
 int test_range() {
-  limb_vec_t* ll = new_limb_list();
-  limb_vec_t* input = new_limb_list();
+  limb_dlist_t* ll = new_limb_list();
+  limb_dlist_t* input = new_limb_list();
   insert_at_tail(ll, 3);
   
   LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
     for (size_t i = 0; i < 1024; i++) {
       copy_limb_list(input, ll);
-      limb_vec_t* collatz = collatz_encode(input);
-      limb_vec_t* uncollatz = collatz_decode(collatz);
+      limb_dlist_t* collatz = collatz_encode(input);
+      limb_dlist_t* uncollatz = collatz_decode(collatz);
       canonicalize(uncollatz);
       
       if (!is_eq(ll, uncollatz)) {
@@ -149,16 +150,16 @@ int test_range() {
 }
 
 int test_range2() {
-  limb_vec_t* ll = new_limb_list();
-  limb_vec_t* input = new_limb_list();
+  limb_dlist_t* ll = new_limb_list();
+  limb_dlist_t* input = new_limb_list();
   insert_at_tail(ll, 1);
   
   LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
     for (size_t i = 0; i < 1024; i++) {
 
       copy_limb_list(input, ll);
-      limb_vec_t* collatz = collatz_encode(input);
-      limb_vec_t* uncollatz = collatz_decode(collatz);
+      limb_dlist_t* collatz = collatz_encode(input);
+      limb_dlist_t* uncollatz = collatz_decode(collatz);
       canonicalize(uncollatz);
       
       if (!is_eq(ll, uncollatz)) {
@@ -188,7 +189,7 @@ int test_range2() {
 
 
 void test_limb_list() {
-  limb_vec_t* ll = new_limb_list();
+  limb_dlist_t* ll = new_limb_list();
   printf("empty: ");
   print_limb_list(ll);
   
@@ -199,43 +200,22 @@ void test_limb_list() {
   printf("insert 0-9 at tail: ");
   print_limb_list(ll);
   
-  for (size_t i = 0; i < 4; i++) {
-    insert_at_head(ll, (limb_t) i);
-  }
-  
-  
-  printf("insert 0-4 at head: ");
-  print_limb_list(ll);
-  
+
   grow_limb_list(ll);
   printf("grow list: ");
   print_limb_list(ll);
   
   for (size_t i = 0; i < 6; i++) {
-    insert_at_head(ll, (limb_t) i);
+    insert_at_tail(ll, (limb_t) i);
   }
-  printf("insert 0-6 at head: ");
+  printf("insert 0-6 at tail: ");
   print_limb_list(ll);
   
   for (size_t i = 0; i < 4; i++) {
     remove_at_tail(ll);
   }
   
-  printf("remove 6-9 at tail: ");
-  print_limb_list(ll);
-  
-  for (size_t i = 0; i < 3; i++) {
-    remove_at_head(ll);
-  }
-  
-  printf("remove 3-1 at head: ");
-  print_limb_list(ll);
-  
-  for (size_t i = 0; i < 12; i++) {
-    remove_at_head(ll);
-  }
-  
-  printf("remove all but one at head: ");
+  printf("remove 3-6 at tail: ");
   print_limb_list(ll);
   
   destroy_limb_list(ll);
@@ -274,7 +254,7 @@ void encode_main(char* argv[]) {
 
 
   DEFER(fclose(in_file), fclose(out_file)) {
-    limb_vec_t* ll = new_limb_list();
+    limb_dlist_t* ll = new_limb_list();
 
     limb_t limb;
     size_t actual_read = 0;
@@ -317,7 +297,7 @@ void encode_main(char* argv[]) {
           printf("info: reconstructed limb: %016llx", limb);
 
 
-          grow_limb_list_to_length(ll, ll->length + 1);
+          resize_limb_list_to_length(ll, ll->length + 1);
           insert_at_tail(ll, limb);
 
           break;
@@ -329,14 +309,14 @@ void encode_main(char* argv[]) {
           errx(EXIT_FAILURE, "err: failed to read from file");
         }
       }
-      grow_limb_list_to_length(ll, ll->length + 1);
+      resize_limb_list_to_length(ll, ll->length + 1);
       insert_at_tail(ll, limb);
     }
 
     printf("\nread: %zu data units\n", actual_read);
     //print_limb_list(ll);
 
-    limb_vec_t* collatz;
+    limb_dlist_t* collatz;
     
     if (*argv[1] == 'e') {
       collatz = collatz_encode(ll);
@@ -372,12 +352,12 @@ void encode_main(char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
-  if (argc != 4 && argc != 3) {
+  if (argc != 4 && argc != 2) {
     print_usage(argv[0]);
     return 0;
   }
 
-  if (argc == 3) {
+  if (argc == 2) {
     if (*argv[1] == 't') {
       test();
       test_range();
