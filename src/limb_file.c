@@ -17,7 +17,7 @@ size_t read_file(limb_dlist_t* ll, FILE *file) {
         fsetpos(file, &pos);
 
         // Read last bytes
-        limb_t mini_limb[sizeof(limb)] = {0};
+        unsigned char mini_limb[sizeof(limb)] = {0};
         size_t mini_limb_len = 0;
 
         // Read byte by byte until we fail
@@ -32,7 +32,7 @@ size_t read_file(limb_dlist_t* ll, FILE *file) {
         // Reconstruct limb from mini limb
         limb = 0;
         for (size_t i = 0; i < mini_limb_len; i++) {
-          printf("info: got byte %02x\n", (char) mini_limb[i]);
+          printf("info: got byte %02x\n", mini_limb[i]);
           limb <<= 8;
           limb |= mini_limb[mini_limb_len - 1 - i];
         }
@@ -68,13 +68,16 @@ size_t write_file(limb_dlist_t* ll, FILE *file) {
 
   // Decompose into mini limbs
   limb_t limb = LL_TAIL(ll);
-  limb_t mini_limb[sizeof(limb_t)] = {0};
+
+  printf("info: got limb %016llx\n", limb);
+
+  unsigned char mini_limb[sizeof(limb_t)] = {0};
   limb_t mini_limb_len = sizeof(limb_t);
 
   for (size_t i = 0; i < sizeof(limb_t); i++) {
-    limb >>= 8;
     mini_limb[i] = limb & 0xff;
-    printf("info: got byte %02x\n", (char) mini_limb[i]);
+    limb >>= 8;
+    printf("info: got byte %02x\n", mini_limb[i]);
   }
 
   // Chop off the most significant bytes equal to zero
@@ -82,6 +85,8 @@ size_t write_file(limb_dlist_t* ll, FILE *file) {
     if (mini_limb[i] != 0) break;
     mini_limb_len--;
   }
+
+  printf("info: got length %zu\n", mini_limb_len);
 
   // Write the mini-limbs byte by byte
   for (size_t i = 0; i < mini_limb_len; i++) {
