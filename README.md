@@ -11,6 +11,5 @@ A fast arbitrary-precision unsigned integer arithmetic library written in C opti
     - `O(n^2)` left shift bit by bit and set the least significant bit based on `is_even` check to convert into `2**odd - 2` radix representation
 
 # Current work in progress
-- Rewriting to pure dynamic arrays (instead of the custom dynamic circular buffer implementation) to allow compiler optimizations
 - Enabling vectorization to allow SIMD optimizations
 - Parallelizing with OpenMP
