@@ -3,7 +3,7 @@
 
 size_t read_file(limb_dlist_t* ll, FILE *file) {
   limb_t limb;
-  size_t bytes_read;
+  size_t bytes_read = 0;
   size_t units_read;
   fpos_t pos;
 
@@ -72,7 +72,7 @@ size_t write_file(limb_dlist_t* ll, FILE *file) {
   printf("info: got limb %016llx\n", limb);
 
   unsigned char mini_limb[sizeof(limb_t)] = {0};
-  limb_t mini_limb_len = sizeof(limb_t);
+  size_t mini_limb_len = sizeof(limb_t);
 
   for (size_t i = 0; i < sizeof(limb_t); i++) {
     mini_limb[i] = limb & 0xff;
