@@ -1,4 +1,5 @@
 #include "limb.h"
+#include "limb_file.h"
 #include "limb_dlist.h"
 #include "limb_radix_common.h"
 #include "limb_radix_pow2.h"
@@ -256,64 +257,13 @@ void encode_main(char* argv[]) {
   DEFER(fclose(in_file), fclose(out_file)) {
     limb_dlist_t* ll = new_limb_list();
 
-    limb_t limb;
-    size_t actual_read = 0;
-    size_t data_units_read;
-    fpos_t pos;
-    
-    while (true) {
-      fgetpos(in_file,&pos);
-      data_units_read = fread(&limb, sizeof(limb), 1, in_file);
-      actual_read += data_units_read;
-      if (data_units_read != 1) {
-        if (feof(in_file)) {
-          printf("warn: reached file eof\n");
-
-          // Rewind back to just b4 eof error and 
-          // attempt to read out as bytes
-          fsetpos(in_file, &pos);
-          printf("info: attempting to read last bytes\n");
-
-          // Read last bytes
-          limb_t mini_limb[sizeof(limb)] = {0};
-          size_t mini_limb_index = 0;
-          size_t mini_data_units_read = 0;
-
-          while (true) {
-            mini_data_units_read = fread(&mini_limb[mini_limb_index++], 1, 1, in_file);
-            if (mini_data_units_read != 1) break;
-          }
-
-          printf("info: read %zu bytes\n", mini_limb_index - 1);
-
-          // Reconstruct limb from mini limb
-          limb = 0;
-          for (size_t i = 0; i < mini_limb_index - 1; i++) {
-            printf("info: got byte %02x\n", (char) mini_limb[i]);
-            limb <<= 8;
-            limb |= mini_limb[mini_limb_index - 2 - i];
-          }
-
-          printf("info: reconstructed limb: %016llx", limb);
-
-
-          resize_limb_list_to_length(ll, ll->length + 1);
-          insert_at_tail(ll, limb);
-
-          break;
-        }
-        if (ferror(in_file)) {
-          fclose(in_file);
-          fclose(out_file);
-          destroy_limb_list(ll);
-          errx(EXIT_FAILURE, "err: failed to read from file");
-        }
-      }
-      resize_limb_list_to_length(ll, ll->length + 1);
-      insert_at_tail(ll, limb);
+    size_t bytes_read = read_file(ll, in_file);
+    if (bytes_read == __SIZE_MAX__) {
+      printf("err: failed to read from file");
+      break;
     }
+    printf("\nread: %zu data units\n", bytes_read);
 
-    printf("\nread: %zu data units\n", actual_read);
     //print_limb_list(ll);
 
     limb_dlist_t* collatz;
@@ -329,22 +279,14 @@ void encode_main(char* argv[]) {
       destroy_limb_list(ll);
       break;
     }
-
     
-    size_t actual_write = 0;
-    size_t data_units_written;
-    
-    for (size_t i = 0; i < collatz->length; i++) {
-      data_units_written= fwrite(&LL_INDEX(collatz,i), sizeof(limb), 1, out_file);
-      actual_write += data_units_written;
-      if (data_units_written != 1) {
-        fclose(in_file);
-        fclose(out_file);
-        errx(EXIT_FAILURE, "err: failed to write to file");
-      }
+    size_t bytes_write = write_file(collatz, out_file);
+    if (bytes_write == __SIZE_MAX__) {
+      printf("err: failed to write to file");
+      break;
     }
 
-    printf("\nwrite: %zu data units\n", actual_write);
+    printf("\nwrite: %zu data units\n", bytes_write);
 
     destroy_limb_list(ll);
     destroy_limb_list(collatz);
