@@ -74,8 +74,11 @@ void shrink_limb_list(limb_dlist_t* ll) {
 bool is_well_sized(limb_dlist_t* ll, size_t length) {
   bool does_fit = length <= ll->container_size;
   bool is_snug_fit = length > ll->container_size / 4;
+  bool is_small = length < LL_INITIAL_SIZE;
 
-  return does_fit && is_snug_fit;
+  if (does_fit && is_snug_fit) return true;
+  if (does_fit && is_small) return true;
+  return false;
 }
 
 void resize_limb_list_to_length(limb_dlist_t* ll, size_t length) {
