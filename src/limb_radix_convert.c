@@ -28,9 +28,9 @@ void to_radix_custom(limb_dlist_t* dest, limb_dlist_t* src) {
   pad_zero(dest);
   
   for (size_t i = src_bit_len - 1u; i != __SIZE_MAX__; i--) {
+    left_shift(dest);
     if (get_ith_bit(src, i) != 0) {
       plus_one(dest);
     }
-    left_shift(dest);
   }
 }
