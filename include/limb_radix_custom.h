@@ -8,5 +8,6 @@ void minus_one(limb_dlist_t* ll);
 void left_shift(limb_dlist_t* ll);
 void right_shift(limb_dlist_t* ll);
 void divide_by_three(limb_dlist_t* ll);
+void multiply_by_three(limb_dlist_t* ll);
 void divide_by_three_optim(limb_dlist_t* ll, limb_dlist_t* buffer);
 void fused_increment_divide_by_two(limb_dlist_t* ll);

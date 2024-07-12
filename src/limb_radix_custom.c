@@ -2,6 +2,8 @@
 #include "limb_radix_common.h"
 #include "limb_radix_custom.h"
 
+#include "debug.h"
+
 #define FOR_EACH_CARRY_PROPAGATE(LL, EXPR_I) do { \
   limb_t _carry = 0; \
   for (size_t i = 0; i < (LL)->length; i++) { \
@@ -84,6 +86,31 @@ void divide_by_three(limb_dlist_t* ll) {
   for (size_t i = 0; i < ll->length - 1; i++) {
     LL_INDEX(ll, i) = (LL_INDEX(ll, i) / 3u) + (LL_INDEX(ll, i + 1) % 3u) * LIMB_DIVIDE_BY_THREE;
   }
+}
+
+void multiply_by_three(limb_dlist_t* ll) {
+
+  // Ensure most significant limb is 0
+  canonicalize(ll);
+  guard_against_overflow(ll);
+  
+
+  limb_t carry = 0;
+  for (size_t i = 0; i < ll->length; i++) {
+    limb_t lshift = (LL_INDEX(ll, i) << 1u) + carry;
+    limb_t lshift_mod = lshift % LIMB_BASE;
+    limb_t lshift_div = lshift / LIMB_BASE;
+
+
+    limb_t triple = lshift_mod + LL_INDEX(ll, i);
+    limb_t triple_mod = triple % LIMB_BASE;
+    limb_t triple_div = triple / LIMB_BASE;
+
+    LL_INDEX(ll, i) = triple_mod;
+
+    carry = lshift_div + triple_div;
+  }
+
 }
 
 void divide_by_three_optim(limb_dlist_t* ll, limb_dlist_t* buffer) {
