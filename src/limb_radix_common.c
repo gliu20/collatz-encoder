@@ -1,5 +1,3 @@
-
-#include "debug.h"
 #include "limb_radix_common.h"
 
 bool is_even(limb_dlist_t* ll) {
