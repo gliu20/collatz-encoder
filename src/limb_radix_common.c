@@ -2,44 +2,40 @@
 #include "debug.h"
 #include "limb_radix_common.h"
 
-bool is_even(limb_vec_t* ll) {
+bool is_even(limb_dlist_t* ll) {
   if (ll->length == 0) return true;
   return (LL_HEAD(ll) & 1) == 0;
 }
 
-void pad_zero(limb_vec_t* ll) {
-  grow_limb_list_to_length(ll, ll->length + 1);
+void pad_zero(limb_dlist_t* ll) {
+  resize_limb_list_to_length(ll, ll->length + 1);
   insert_at_tail(ll, 0);
 }
 
-void pad_to_length(limb_vec_t* ll, size_t length) {
-  grow_limb_list_to_length(ll, ll->length + 1);
+void pad_to_length(limb_dlist_t* ll, size_t length) {
+  resize_limb_list_to_length(ll, ll->length + 1);
   while (ll->length < length) insert_at_tail(ll, 0);
 }
 
-void guard_against_empty(limb_vec_t* ll) {
-  if (ll->length == 0) pad_zero(ll);
-}
-
-void guard_against_overflow(limb_vec_t* ll) {
-  // These need to be separate if statements to prevent OOB
-  // read by the LL_TAIL macro
+void guard_against_overflow(limb_dlist_t* ll) {
   if (ll->length == 0) {
     pad_zero(ll);
+    return;
   }
   if (LL_TAIL(ll) != 0) {
     pad_zero(ll);
+    return;
   }
 }
 
-bool is_eq_one(limb_vec_t* ll) {  
+bool is_eq_one(limb_dlist_t* ll) {  
   canonicalize(ll);
   if (ll->length != 1) return false;
   if (LL_HEAD(ll) != 1) return false;
   return true;
 }
 
-bool is_eq(limb_vec_t* ll_a, limb_vec_t* ll_b) {  
+bool is_eq(limb_dlist_t* ll_a, limb_dlist_t* ll_b) {  
   canonicalize(ll_a);
   canonicalize(ll_b);
   
@@ -50,7 +46,7 @@ bool is_eq(limb_vec_t* ll_a, limb_vec_t* ll_b) {
   return true;
 }
 
-size_t get_bit_length(limb_vec_t* ll) {
+size_t get_bit_length(limb_dlist_t* ll) {
   canonicalize(ll);
   if (ll->length == 0) return 0;
   

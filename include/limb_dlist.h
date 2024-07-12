@@ -5,6 +5,9 @@
 #include "limb.h"
 
 #define LL_INITIAL_SIZE 16
+#define LL_INDEX(LL, I) (LL)->handle[I]
+#define LL_HEAD(LL) (LL)->handle[0]
+#define LL_TAIL(LL) (LL)->handle[(LL)->length - 1u]
 
 typedef struct limb_dlist {
   size_t length;
