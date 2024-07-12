@@ -13,7 +13,7 @@ void pad_zero(limb_dlist_t* ll) {
 }
 
 void pad_to_length(limb_dlist_t* ll, size_t length) {
-  resize_limb_list_to_length(ll, ll->length + 1);
+  resize_limb_list_to_length(ll, length + 1);
   while (ll->length < length) insert_at_tail(ll, 0);
 }
 
