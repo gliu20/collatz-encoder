@@ -12,6 +12,19 @@
 } \
 while (0)
 
+#define PRAGMA_WRAP(X) _Pragma(#X)
+
+#define FOR_EACH_CARRY_PROPAGATE_UNROLL(LL, EXPR_I, UNROLL) do { \
+  limb_t _carry = 0; \
+  PRAGMA_WRAP(unroll UNROLL) \
+  for (size_t i = 0; i < (LL)->length; i++) { \
+    limb_t _result = (EXPR_I) + _carry; \
+    LL_INDEX(LL, i) = _result % LIMB_BASE; \
+    _carry = _result / LIMB_BASE; \
+  } \
+} \
+while (0)
+
 #define max(a,b) ((a) > (b) ? (a) : (b))
 
 
@@ -42,7 +55,7 @@ void minus_one(limb_dlist_t* ll) {
 void left_shift(limb_dlist_t* ll) {
   guard_against_overflow(ll);
   
-  FOR_EACH_CARRY_PROPAGATE(ll, LL_INDEX(ll, i) << 1u);
+  FOR_EACH_CARRY_PROPAGATE_UNROLL(ll, LL_INDEX(ll, i) << 1u, 1);
 }
 
 void right_shift(limb_dlist_t* ll) {
