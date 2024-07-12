@@ -11,5 +11,4 @@ void guard_against_overflow(limb_dlist_t* ll);
 
 bool is_eq_one(limb_dlist_t* ll);
 bool is_eq(limb_dlist_t* ll_a, limb_dlist_t* ll_b);
-size_t get_bit_length(limb_dlist_t* ll) ;
 
