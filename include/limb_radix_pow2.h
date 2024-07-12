@@ -1,6 +1,6 @@
 #pragma once
 
-#include "limb_list.h"
+#include "limb_dlist.h"
 
-void set_ith_bit(limb_vec_t* ll, size_t bit_index);
-limb_t get_ith_bit(limb_vec_t* ll, size_t bit_index);
+void set_ith_bit(limb_dlist_t* ll, size_t bit_index);
+limb_t get_ith_bit(limb_dlist_t* ll, size_t bit_index);
