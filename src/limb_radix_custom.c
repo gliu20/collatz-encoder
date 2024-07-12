@@ -86,6 +86,38 @@ void divide_by_three(limb_dlist_t* ll) {
   }
 }
 
+void divide_by_three_optim(limb_dlist_t* ll, limb_dlist_t* buffer) {
+  // Ensures most significant limb is 0 so we dont have to do a check for the (i+1)-th index
+  canonicalize(ll);
+  guard_against_overflow(ll);
+
+  resize_limb_list_to_length(buffer, ll->length + 1);
+  buffer->length = ll->length - 1;
+
+  // $$ 
+  // \sum_{i=0}^{n} (a_i/3)b^i
+  // = \sum_{i=0}^{n} \left( (a_i//3) + (a_{i+1}%3)(b/3) \right) b^i 
+  // $$
+  size_t i;
+
+  // Most significant limb is 0, so use `len - 1` to prevent OOB read
+  #pragma unroll(1)
+  #pragma clang loop vectorize(enable)
+  for (i = 0; i < ll->length - 1; i += 4) {
+    buffer->handle[i] = (ll->handle[i] / 3u) + (ll->handle[i + 1] % 3u) * LIMB_DIVIDE_BY_THREE;
+    buffer->handle[i + 1] = (ll->handle[i + 1] / 3u) + (ll->handle[i + 2] % 3u) * LIMB_DIVIDE_BY_THREE;
+    buffer->handle[i + 2] = (ll->handle[i + 2] / 3u) + (ll->handle[i + 3] % 3u) * LIMB_DIVIDE_BY_THREE;
+    buffer->handle[i + 3] = (ll->handle[i + 3] / 3u) + (ll->handle[i + 4] % 3u) * LIMB_DIVIDE_BY_THREE;
+  }
+
+  // Fixup to finish the unrolled part above
+  for (; i < ll->length - 1; i++) {
+    buffer->handle[i] = (ll->handle[i] / 3u) + (ll->handle[i + 1] % 3u) * LIMB_DIVIDE_BY_THREE;
+  }
+
+  swap_limb_list(ll, buffer);
+}
+
 void fused_increment_divide_by_two(limb_dlist_t* ll) {
   // Ensures most significant limb is 0 so we dont have to do a check for the (i+1)-th index
   canonicalize(ll);
