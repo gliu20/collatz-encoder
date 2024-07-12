@@ -57,7 +57,7 @@ void minus_one(limb_dlist_t* ll) {
 void left_shift(limb_dlist_t* ll) {
   guard_against_overflow(ll);
   
-  FOR_EACH_CARRY_PROPAGATE_UNROLL(ll, LL_INDEX(ll, i) << 1u, 1);
+  FOR_EACH_CARRY_PROPAGATE(ll, LL_INDEX(ll, i) << 1u);
 }
 
 void right_shift(limb_dlist_t* ll) {
@@ -114,10 +114,7 @@ void multiply_by_three(limb_dlist_t* ll) {
 }
 
 void multiply_by_three_and_increment(limb_dlist_t* ll) {
-  // Ensure most significant limb is 0
-  canonicalize(ll);
   guard_against_overflow(ll);
-  
 
   limb_t carry = 1;
   for (size_t i = 0; i < ll->length; i++) {
