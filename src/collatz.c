@@ -8,10 +8,6 @@
 
 #include <err.h>
 #include <time.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <limits.h>
 
 #define DEFER(...) for (int _i = 1; _i; _i = 0, __VA_ARGS__)
 

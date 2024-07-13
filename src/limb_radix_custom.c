@@ -2,8 +2,6 @@
 #include "limb_radix_common.h"
 #include "limb_radix_custom.h"
 
-#include "debug.h"
-
 #define FOR_EACH_CARRY_PROPAGATE(LL, EXPR_I) do { \
   limb_t _carry = 0; \
   for (size_t i = 0; i < (LL)->length; i++) { \
