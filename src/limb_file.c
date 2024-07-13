@@ -57,6 +57,9 @@ size_t read_file(limb_dlist_t* ll, FILE *file) {
 size_t write_file(limb_dlist_t* ll, FILE *file) {
   size_t bytes_write = 0;
   size_t units_write;
+
+  // We can't write nothing
+  if (ll->length == 0) return __SIZE_MAX__;
   
   for (size_t i = 0; i < ll->length - 1; i++) {
     units_write = fwrite(&LL_INDEX(ll, i), sizeof(limb_t), 1, file);
