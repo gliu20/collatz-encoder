@@ -31,6 +31,11 @@ void canonicalize(limb_dlist_t* ll);
 void insert_at_tail(limb_dlist_t* ll, limb_t limb);
 void remove_at_tail(limb_dlist_t* ll);
 
+/**
+ * Grow and shrink will always do their respective action
+ * regardless of whether that causes the list to stay 
+ * well-sized or not 
+ */
 void grow_limb_list(limb_dlist_t* ll);
 void shrink_limb_list(limb_dlist_t* ll);
 bool is_well_sized(limb_dlist_t* ll, size_t length);
