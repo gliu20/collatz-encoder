@@ -243,7 +243,8 @@ void encode_main(char* argv[]) {
 
     size_t bytes_read = read_file(ll, in_file);
     if (bytes_read == __SIZE_MAX__) {
-      printf("err: failed to read from file");
+      printf("err: failed to read from file\n");
+      destroy_limb_list(ll);
       break;
     }
     printf("\nread: %zu bytes\n", bytes_read);
@@ -274,7 +275,8 @@ void encode_main(char* argv[]) {
     
     size_t bytes_write = write_file(ll, out_file);
     if (bytes_write == __SIZE_MAX__) {
-      printf("err: failed to write to file");
+      printf("err: failed to write to file\n");
+      destroy_limb_list(ll);
       break;
     }
 
