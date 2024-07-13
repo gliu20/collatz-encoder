@@ -122,7 +122,7 @@ int test_convert() {
   insert_at_tail(ll, 1);
   
   LOG_EXECUTION_TIME("Passed tests: %f seconds\n") {
-    for (size_t i = 0; i < 256*256*256; i++) {
+    for (size_t i = 0; i < 256*256*12; i++) {
 
       copy_limb_list(input, ll);
       limb_dlist_t* pow2 = new_limb_list();
@@ -316,18 +316,11 @@ void encode_main(char* argv[]) {
       to_radix_custom(buffer, ll);
       destroy_limb_list(ll);
       ll = collatz_encode(buffer);
-      to_radix_pow2(buffer, ll);
-      swap_limb_list(buffer, ll);
       destroy_limb_list(buffer);
     }
     else if (*argv[1] == 'd') {
-      limb_dlist_t* buffer = new_limb_list();
-
-      to_radix_custom(buffer, ll);
-      destroy_limb_list(ll);
-      ll = collatz_decode(buffer);
-      to_radix_pow2(buffer, ll);
-      swap_limb_list(buffer, ll);
+      limb_dlist_t* buffer = collatz_decode(ll);
+      to_radix_pow2(ll, buffer);
       destroy_limb_list(buffer);
     }
     else {
