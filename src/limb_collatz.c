@@ -9,6 +9,9 @@ limb_dlist_t* collatz_encode(limb_dlist_t* ll) {
   limb_dlist_t* ll_half = new_limb_list();
   size_t i = 0;
   
+  // There does not exist a collatz encoding for 0
+  // so we must check if its equal to zero
+  canonicalize(ll);
   if (ll->length == 0) {
     destroy_limb_list(ll_half);
     return result;
@@ -43,6 +46,9 @@ limb_dlist_t* collatz_decode(limb_dlist_t* ll) {
   pad_zero(result);
   plus_one(result);
 
+  // There does not exist a collatz encoding for 0
+  // so we must check if its equal to zero
+  canonicalize(ll);
   if (ll->length == 0) {
     return result;
   }
